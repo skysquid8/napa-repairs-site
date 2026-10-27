@@ -243,6 +243,12 @@ ol.tiles{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .rtable td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.rtable tbody tr{cursor:pointer}.rtable tbody tr:hover td{background:var(--accent-soft)}
 .rtable .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.rtable .c{text-align:center}.rtable tfoot td{border-bottom:0;background:var(--sunk)}
 .chip.st.done{background:var(--good-soft);color:var(--good)}.chip.st.queue{background:var(--sunk);color:var(--muted)}
+.pickbtn{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:7px 10px;text-align:left;width:100%;display:flex;justify-content:space-between;gap:8px;font-size:14px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.pickbtn span{color:var(--muted)}
+.picker{position:fixed;z-index:80;width:min(380px,calc(100vw - 16px));background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 40px rgb(0 0 0/.25);padding:8px;display:grid;gap:6px}
+.picker input{border:1px solid var(--accent);border-radius:7px;padding:8px 10px;font-size:15px;background:var(--bg);width:100%}
+.picker .plist{max-height:260px;overflow:auto;display:grid}.picker .plist button{border:0;background:none;text-align:left;padding:7px 8px;border-radius:6px;font-size:13.5px}
+.picker .plist button.on,.picker .plist button:hover{background:var(--accent-soft)}
+.chip.spare{background:var(--sunk);color:var(--muted);border:1px dashed var(--line)}
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgb(10 14 12/.45);z-index:40}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgb(0 0 0/.2)}
@@ -521,7 +527,7 @@ function renderSummary(){
   renderBell();
   if(S.me)$('#roleLine').textContent=isEd()?'Editor · add, edit and reorder projects':(apOn()?'Reviewer · approve projects and comment':'Repair progress · comment on any project');
   if($('#apChk'))$('#apChk').checked=apOn();
-  const ps=S.project.filter(p=>!p.private),nPriv=S.project.length-ps.length;
+  const ps=S.project.filter(p=>!p.private&&!p.spare),nPriv=S.project.filter(p=>p.private).length;
   let need=0,ok=0,no=0,needT=[0,0],okT=[0,0],allT=[0,0];
   for(const p of ps){const r=reviewOf(p.id),e=estimate(p),t=e.tot||[0,0];allT[0]+=t[0];allT[1]+=t[1];
     const awaiting=awaitingOf(p);
@@ -541,6 +547,7 @@ function renderSummary(){
 }
 function chipsFor(p){
   const r=reviewOf(p.id),out=[];
+  if(p.spare&&isEd())out.push('<span class="chip spare">Spare: tell Claude what to name it</span>');
   if(p.private&&isEd())out.push('<span class="chip priv">Private</span>');
   out.push(`<span class="chip p${p.priority||2}">${PRI[p.priority||2]}</span>`);
   if(isWater(p))out.push('<span class="chip water">Water / rot</span>');
@@ -775,6 +782,29 @@ async function loadKnown(){
   await Promise.all([w(),w(),w(),w(),w(),w()]);return knownHashes}
 function findDup(h){let best=null;for(const k of knownHashes||[]){const d=ham(h,k.h);if(d<=6&&(!best||d<best.d))best={...k,d}}return best}
 
+
+/* ---------- fast project search picker ---------- */
+const projLabel=id=>{const p=S.project.find(x=>x.id===id);return p?`#${p.num} ${p.location} · ${tTitle(p)}`:'Choose project…'};
+let _dbs=0;function drawBulkSoon(){if(_dbs)return;_dbs=setTimeout(()=>{_dbs=0;if(S.open?.type==='bulk'&&!document.querySelector('.picker'))drawBulk()},400)}
+function openPicker(anchor,onPick){
+  document.querySelector('.picker')?.remove();
+  const box=document.createElement('div');box.className='picker';
+  box.innerHTML='<input type="search" placeholder="Type a word or number, e.g. chimney, 22, gutter" aria-label="Search projects"><div class="plist"></div>';
+  document.body.appendChild(box);const r=anchor.getBoundingClientRect();
+  box.style.top=Math.min(innerHeight-330,r.bottom+4)+'px';box.style.left=Math.max(8,Math.min(innerWidth-388,r.left))+'px';
+  const all=[{id:'RECEIPT',t:'Receipt or invoice → Receipts tab',k:'receipt invoice'},...[...S.project].sort((a,b)=>(+a.num||0)-(+b.num||0)).map(p=>({id:p.id,t:`#${p.num} ${p.location} · ${tTitle(p)}`,k:`${p.num} ${p.location} ${tTitle(p)} ${p.title} ${p.spare?'spare':''}`.toLowerCase()}))];
+  const inp=box.querySelector('input'),list=box.querySelector('.plist');let sel=0,shown=[];
+  const draw=()=>{const q=inp.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    shown=all.filter(o=>q.every(w=>o.k.includes(w)||(o.id!=='RECEIPT'&&String(o.t).toLowerCase().includes(w)))).slice(0,40);sel=Math.min(sel,shown.length-1);
+    list.innerHTML=shown.map((o,i)=>`<button data-i="${i}" class="${i===sel?'on':''}">${esc(o.t)}</button>`).join('')||'<div class="hint" style="padding:8px">No match</div>'};
+  const pick=o=>{if(!o)return;box.remove();onPick(o.id)};
+  inp.oninput=()=>{sel=0;draw()};
+  inp.onkeydown=e=>{if(e.key==='ArrowDown'){sel=Math.min(sel+1,shown.length-1);draw();e.preventDefault()}else if(e.key==='ArrowUp'){sel=Math.max(sel-1,0);draw();e.preventDefault()}else if(e.key==='Enter'){pick(shown[sel]);e.preventDefault()}else if(e.key==='Escape')box.remove()};
+  list.onclick=e=>{const b=e.target.closest('[data-i]');if(b)pick(shown[+b.dataset.i])};
+  setTimeout(()=>document.addEventListener('mousedown',function h(e){if(!box.contains(e.target)){box.remove();document.removeEventListener('mousedown',h)}}),0);
+  draw();inp.focus();
+}
+
 /* ---------- bulk photo drop ---------- */
 let bulk=[];
 $('#bulkBtn').onclick=()=>{bulk=[];S.open={type:'bulk'};openDrawer();renderDrawer();loadOrphans()};
@@ -796,7 +826,7 @@ function drawBulk(){
     <div class="blist">${bulk.map((x,i)=>`<div class="brow">
       <button class="thumb zoom" data-zoom="${i}" aria-label="See larger">${x.preview?`<img src="${x.preview}" alt="">`:''}</button>
       <div class="bfields">
-        <select data-bi="${i}" data-f="projectId"><option value="">${x.state==='ready'||x.state==='error'?'Choose project…':'Sorting…'}</option><option value="RECEIPT"${x.projectId==='RECEIPT'?' selected':''}>Receipt or invoice → Receipts tab</option>${opts.replace(`value="${x.projectId}"`,`value="${x.projectId}" selected`)}</select>
+        <button class="pickbtn" data-pick="${i}">${x.projectId==='RECEIPT'?'Receipt or invoice → Receipts tab':x.projectId?esc(projLabel(x.projectId)):(x.state==='ready'||x.state==='error'?'Search projects…':'Sorting…')} <span>⌕</span></button>
         <div class="bline"><select data-bi="${i}" data-f="stage"${x.projectId==='RECEIPT'?' hidden':''}>${['before','during','after'].map(s=>`<option value="${s}"${x.stage===s?' selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}</select>
         <span class="hint">${esc(x.note||'')}</span></div>
       </div>
@@ -821,6 +851,7 @@ function drawBulk(){
   $('#bulkPick').onclick=()=>{$('#bulkFiles').value='';$('#bulkFiles').click()};
   $('#dBody').querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>{const x=bulk[+b.dataset.zoom];$('#lbImg').src=x.key?photoUrl(x.key):x.preview;$('#lb').hidden=false});
   $('#dBody').querySelectorAll('[data-bi]').forEach(el=>el.onchange=()=>{bulk[+el.dataset.bi][el.dataset.f]=el.value;drawBulk()});
+  $('#dBody').querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>openPicker(b,id=>{bulk[+b.dataset.pick].projectId=id;drawBulk()}));
   $('#dBody').querySelectorAll('[data-bx]').forEach(b=>b.onclick=()=>{const x=bulk[+b.dataset.bx];if(x.key)save('dismiss',null,{keys:[x.key]}).catch(()=>{});bulk.splice(+b.dataset.bx,1);drawBulk()});
   const sv=$('#bulkSave');if(sv)sv.onclick=bulkSave;
   const re=$('#bulkRe');if(re)re.onclick=async()=>{re.disabled=true;const todo=bulk.filter(x=>x.key&&!x.projectId);todo.forEach(x=>{x.state='sorting';x.note=''});drawBulk();S.busy++;
@@ -861,8 +892,8 @@ async function bulkAdd(files){
       if(['before','during','after'].includes(f.stage))x.stage=f.stage;
       x.note=f.reason||'';x.state='ready'}
     catch(e){x.state=x.key?'ready':'error';x.note=x.key?'AI could not place this one. Pick the project.':e.message}
-    if(S.open?.type==='bulk')drawBulk()}};
-  await Promise.all([worker(),worker(),worker()]);S.busy--;
+    if(S.open?.type==='bulk')drawBulkSoon()}};
+  await Promise.all([worker(),worker(),worker()]);drawBulk();S.busy--;
 }
 async function bulkSave(){
   const recs=bulk.filter(x=>x.projectId==='RECEIPT'&&x.key);

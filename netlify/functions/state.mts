@@ -20,8 +20,8 @@ export default async (req: Request) => {
   const preview = s.role === "editor" && new URL(req.url).searchParams.get("as") === "reviewer";
   if (s.role !== "editor" || preview) {
     // Private items are never sent to the reviewer.
-    const hidden = new Set(out.project.filter((p) => p.private).map((p) => p.id));
-    out.project = out.project.filter((p) => !p.private);
+    const hidden = new Set(out.project.filter((p) => p.private || p.spare).map((p) => p.id));
+    out.project = out.project.filter((p) => !p.private && !p.spare);
     out.review = out.review.filter((r) => !hidden.has(r.id));
     out.comment = out.comment.filter((c) => !hidden.has(c.projectId));
     // Labor invoices: the manager sees hours billed at $40/hr, never the handyman's own rate or invoice.

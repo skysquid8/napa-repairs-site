@@ -168,6 +168,11 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
   {
     id: "2026-10-27-est-47b",
     ops: [{ num: 47, patch: { materials: "$400-600" } }],
+  },
+  {
+    id: "2026-10-27-spares",
+    projects: [1, 2, 3].map((n) => ({ location: "Spare", section: "Interior", priority: 3, water: false, spare: true, askApproval: false,
+      short: `Spare project ${n}`, title: `Spare project ${n}: drop photos here, then tell Claude what to name it.`, order: 100000 + n })),
   }
 ];
 
@@ -232,7 +237,7 @@ export default async (req: Request) => {
     for (const p of m.projects || []) {
       const id = uid();
       await store.setJSON(`project/${id}`, {
-        id, num: ++maxNum, order: ++maxOrd, status: "queue", askApproval: true, hours: "", materials: "", labor: "",
+        id, num: ++maxNum, order: p.order ?? ++maxOrd, status: "queue", askApproval: true, hours: "", materials: "", labor: "",
         notes: "", photos: [], ...p, source: "Added Oct 26, 2026", createdAt: new Date().toISOString(), createdBy: "Claude",
       });
       added++;

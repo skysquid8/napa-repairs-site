@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Napa Repairs">
+<meta name="theme-color" content="#2d5b4b">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Napa House Repairs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column — summary strip, sortable project tiles, side drawer for detail. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --sunk:#e9ede6; --ink:#1b2320; --muted:#5d6a64; --line:#d9dfd6;
+  --accent:#2d5b4b; --accent-ink:#ffffff; --accent-soft:#dbe8e1;
+  --good:#2c7a4c; --good-soft:#dcefe2; --bad:#b0412c; --bad-soft:#f6e0da; --warn:#a96c12; --warn-soft:#f5e8cf;
+  --p1:#b0412c; --p2:#a96c12; --p3:#6b7570;
+  --sans:"Public Sans",Arial,Helvetica,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121614; --surface:#1a201d; --sunk:#232b27; --ink:#e6ece8; --muted:#9aa7a0; --line:#2e3833;
+  --accent:#86c4aa; --accent-ink:#0e1411; --accent-soft:#22362e;
+  --good:#74c693; --good-soft:#1f3328; --bad:#ec8f79; --bad-soft:#3a2420; --warn:#e3b25e; --warn-soft:#382d18;
+  --p1:#ec8f79; --p2:#e3b25e; --p3:#9aa7a0; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header */
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+header.top .wrap{display:flex;align-items:center;gap:16px;padding-block:8px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:30px;height:30px;border-radius:7px;background:var(--accent);display:grid;place-items:center;flex:none}
+.mark svg{width:18px;height:18px}
+.brand h1{font-size:17px;font-weight:800;letter-spacing:-.01em;margin:0;white-space:nowrap}
+.brand small{display:block;color:var(--muted);font-size:12px;font-weight:500;line-height:1.2}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--sunk);padding:3px;border-radius:9px}
+.tabs button{border:0;background:none;padding:6px 12px;border-radius:7px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0/.08)}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.who b{color:var(--ink);font-weight:600}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;padding:2px 4px;font-size:13px}
+
+/* summary */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-block:18px 14px}
+.stat{background:var(--surface);padding:12px 14px}
+.stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.stat .v{font-size:20px;font-weight:700;margin-top:2px}
+.stat.big{background:var(--accent-soft)}.stat.big .v{font-size:24px}.stat .sub{font-size:11.5px;color:var(--muted)}
+.stat .v small{font-size:12px;color:var(--muted);font-weight:500}
+
+@media (max-width:520px){.summary .stat:last-child:nth-child(odd){grid-column:span 2}}
+/* toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.toolbar .btn,.toolbar .seg button,.toolbar select{font-size:13px}.toolbar .btn{padding:6px 12px}.toolbar .seg button{padding:6px 10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 11px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--accent-soft);color:var(--ink)}
+select.small{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:13px}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}
+.btn.bad{background:var(--surface);border-color:var(--bad);color:var(--bad)}
+.btn.bad.on{background:var(--bad);color:#fff}
+.btn.good.off{background:var(--surface);color:var(--good)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{border-color:transparent;background:none}
+.hint{font-size:12.5px;color:var(--muted)}
+
+/* tiles */
+ol.tiles{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.tile{display:grid;grid-template-columns:auto 76px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px 10px 6px}
+.tile:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.tile.sortable-ghost{opacity:.35}
+.tile.sortable-chosen{box-shadow:0 8px 24px rgb(0 0 0/.15)}
+.handle{border:0;background:none;color:var(--muted);padding:8px 4px;cursor:grab;touch-action:none;display:grid;place-items:center}
+.handle svg{width:14px;height:20px}
+.pos{font:600 13px var(--mono);color:var(--muted);text-align:center;min-width:26px}
+.thumb{width:76px;height:60px;border-radius:7px;overflow:hidden;background:var(--sunk);display:grid;place-items:center;color:var(--muted);font-size:11px}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.tbody{min-width:0;cursor:pointer;border:0;background:none;text-align:left;padding:0}
+.tmeta{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tmeta .ref{font-family:var(--mono)}
+.ttitle{font-weight:600;line-height:1.35;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.p1{background:var(--bad-soft);color:var(--p1)} .chip.p2{background:var(--warn-soft);color:var(--p2)} .chip.p3{color:var(--p3)}
+.chip.approved{background:var(--good-soft);color:var(--good)} .chip.declined{background:var(--bad-soft);color:var(--bad)} .chip.pending{background:var(--warn-soft);color:var(--warn)}
+.chip.water{background:color-mix(in srgb,#2f6fb0 16%,transparent);color:#2f6fb0}
+.chip.priv{background:var(--ink);color:var(--bg)}
+.card2.private{opacity:.82;border-style:dashed}
+.chip.st{background:var(--accent-soft);color:var(--accent)}
+.tnums{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.tnums b{display:block;color:var(--ink);font:500 14px var(--mono)}
+.tile .left{display:flex;align-items:center;gap:0}
+@media (max-width:640px){
+  .tile{grid-template-columns:auto 60px 1fr;padding-right:10px}
+  .thumb{width:60px;height:52px}
+  .tnums{grid-column:3;text-align:left}
+  .tnums b{display:inline;margin-right:6px}
+  .tabs{margin-left:0;order:3;width:100%}
+  .tabs button{flex:1}
+}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);margin:0 0 6px}
+
+
+/* board + big tiles */
+.board{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px;align-items:start}
+@media (max-width:900px){.board{grid-template-columns:repeat(3,minmax(260px,82vw));scroll-snap-type:x mandatory}.col{scroll-snap-align:start}}
+.col{background:var(--sunk);border-radius:12px;padding:10px;min-width:0}
+.col h3{display:flex;justify-content:space-between;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:2px 4px 10px}
+.colList{list-style:none;margin:0;padding:0;display:grid;gap:10px;min-height:80px}
+.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.card2{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.card2:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.card2.sortable-ghost{opacity:.35}.card2.sortable-chosen{box-shadow:0 10px 28px rgb(0 0 0/.18)}
+.ph2{position:relative;aspect-ratio:16/10;background:var(--sunk);display:grid;place-items:center;color:var(--muted);font-size:13px;cursor:pointer;overflow:hidden;max-width:100%}
+.card2.big .ph2{aspect-ratio:4/3}
+.ph2 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph2 .badge{position:absolute;left:8px;top:8px;background:rgb(0 0 0/.7);color:#fff;font:700 14px var(--mono);padding:2px 7px;border-radius:5px}
+.ph2 .pcount{position:absolute;left:8px;bottom:8px;background:rgb(0 0 0/.55);color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px}
+.ph2 .pcount:empty{display:none}
+.ph2 .handle{position:absolute;right:6px;top:6px;background:rgb(0 0 0/.55);color:#fff;border-radius:6px;padding:6px 8px}
+.cbody{border:0;background:none;text-align:left;padding:10px 12px 12px;display:grid;gap:2px;cursor:pointer;min-width:0}
+.quick{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--line);margin-top:auto}
+.quick .done{display:flex;gap:6px;align-items:center;font-weight:600;font-size:13px;cursor:pointer}
+.quick .ask input{accent-color:var(--warn)}
+.quick .done input{width:18px;height:18px;accent-color:var(--good)}
+.quick select{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:5px 6px;font-size:12.5px;min-width:0;max-width:60%}
+.money{display:grid;grid-template-columns:.7fr 1fr 1.2fr 1fr;gap:6px;margin-top:4px}.money span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.money b{font-size:13px;font-weight:600;color:var(--ink)}.money .act b{color:var(--accent)}.hrsl{font-size:12px;color:var(--muted);margin-top:4px}.hrsl b{color:var(--ink);font-weight:600}
+.cost{font-size:12.5px;color:var(--muted);margin-top:6px}.cost b{color:var(--ink);font-weight:600}
+/* reviewer */
+.waterbar{background:color-mix(in srgb,#2f6fb0 10%,var(--surface));border:1px solid color-mix(in srgb,#2f6fb0 35%,var(--line));border-radius:10px;padding:12px 14px;margin:0 0 12px;font-size:14px}
+.intro{max-width:none;color:var(--muted);margin:0 0 6px}
+.rsec{font-size:15px;margin:22px 0 10px;display:flex;gap:8px;align-items:baseline}.rsec .num{color:var(--muted);font-weight:500}
+.rcards{display:grid;gap:14px}
+.rcard{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rcard.approved{border-color:var(--good)}.rcard.declined{border-color:var(--bad)}
+@media (max-width:720px){.rcard{grid-template-columns:1fr}}
+.rpics{display:grid;align-content:start;gap:6px;padding:10px}
+.rpics .ph2,.rpics .compare{aspect-ratio:4/3;max-height:320px;border-radius:8px;width:100%}
+.rinfo{padding:14px 16px;display:grid;gap:8px;align-content:start;min-width:0}
+.rinfo h3{margin:0;font-size:17px;line-height:1.35;text-wrap:balance}
+.why{margin:0;font-size:14.5px}.orig{margin:0;font-size:12.5px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin:4px 0}
+.facts dt{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.facts dd{margin:0;font-weight:600}
+/* bulk */
+.bigdrop{border:2px dashed color-mix(in srgb,var(--accent) 50%,var(--line));border-radius:12px;padding:28px 16px;display:grid;justify-items:center;gap:8px;text-align:center;background:var(--surface)}
+.bigdrop.over{background:var(--accent-soft)}.bigdrop b{font-size:16px}
+.blist{display:grid;gap:8px}
+.brow{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center}
+.brow .thumb{width:64px;height:64px}.thumb.zoom{border:0;padding:0;cursor:zoom-in}
+.bfields{display:grid;gap:5px;min-width:0}
+.bfields select{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px 8px;min-width:0;width:100%}
+.bline{display:flex;gap:8px;align-items:center;min-width:0}.bline select{width:auto}
+.bline .hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+
+/* quick edit */
+#qe{width:calc(100vw - 32px);max-width:1500px;position:relative;left:50%;transform:translateX(-50%)}
+.qt{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13.5px;min-width:1000px}
+.qt th{position:sticky;top:0;background:var(--sunk);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px;font-weight:700}
+.qt td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:middle}
+.qt th.c,.qt td.c{text-align:center}.qt th.n,.qt td.n{text-align:right;white-space:nowrap}
+.qt td.wide{min-width:240px;width:34%}
+.qt input:not([type=checkbox]),.qt select,.qt textarea{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;width:100%;min-width:0;font-size:13.5px}
+.qt input:not([type=checkbox]):hover,.qt select:hover,.qt textarea:hover{border-color:var(--line)}
+.qt input:focus,.qt select:focus,.qt textarea:focus{border-color:var(--accent);background:var(--bg);outline:none}
+.qt textarea{resize:vertical;color:var(--muted);line-height:1.35}
+.qt input[data-k=location]{font-weight:600}
+.qt input.sm{width:78px}
+.qt select[data-k=priority]{min-width:112px}.qt select[data-k=status]{min-width:118px}
+.qt td{padding:6px 6px}.qt input.sm{width:84px}
+.qt input[type=checkbox]{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
+.qt tr.private td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.qt tr.isdone td{background:color-mix(in srgb,var(--good) 7%,transparent)}
+.qthumb{width:56px;height:44px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--sunk);padding:0;color:var(--accent);font-size:18px;display:grid;place-items:center}
+.qthumb img{width:100%;height:100%;object-fit:cover}
+
+.showhead h2{margin:20px 0 4px;font-size:20px}
+.showgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:12px}
+.showcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.showcard .compare,.showcard .ph2{border-radius:0;aspect-ratio:4/3}
+.sbody{padding:12px 14px;display:grid;gap:4px}.sbody h3{margin:0;font-size:16px}
+.newph{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.newph .ph .upl{position:absolute;inset:0;display:grid;place-items:center;background:rgb(0 0 0/.45);color:#fff;font-weight:700}
+.addph.big{aspect-ratio:auto;min-height:84px;grid-column:1/-1;font-size:15px;background:var(--surface);border:2px dashed color-mix(in srgb,var(--accent) 50%,var(--line))}
+.newph:has(.ph) .addph.big{grid-column:auto;aspect-ratio:1}
+.fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:30px;box-shadow:0 6px 20px rgb(0 0 0/.25);z-index:30;display:none}
+@media (max-width:760px){.fab{display:grid;place-items:center}}
+.pvbar{background:#e3a72f;color:#1b2320;position:sticky;top:0;z-index:25}.pvbar .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-block:8px;font-size:14px}.pvbar .btn{margin-left:auto;padding:5px 12px}
+.compact{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px}
+.crow{display:grid;grid-template-columns:auto 22px 44px minmax(0,1fr) auto auto;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 8px 2px 0;min-height:40px}
+.crow.sortable-ghost{opacity:.35}.crow.sortable-chosen{box-shadow:0 8px 22px rgb(0 0 0/.16)}
+.crow .handle{color:var(--muted);padding:4px 2px 4px 6px}
+.cpos{color:var(--muted);font-size:11px;text-align:right}
+.cthumb{width:44px;height:32px;border-radius:5px;overflow:hidden;background:var(--sunk);cursor:pointer}.cthumb img{width:100%;height:100%;object-fit:cover}
+.cmain{min-width:0;cursor:pointer}.ctitle{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ctitle .ref{font-family:var(--mono);color:var(--muted);font-weight:500}
+.crow .chip{font-size:10.5px;padding:1px 6px}
+@media (max-width:900px){.compact{grid-template-columns:1fr}}
+.stick{background:var(--bg)}
+@media (min-width:761px) and (min-height:600px){.stick .grp .sub{display:none}.stick .grp{padding-block:8px}.stick .toolbar{margin-bottom:6px;gap:6px}.stick .btn{padding:6px 11px;font-size:13px}.stick .seg button{padding:5px 9px}
+.stick{position:sticky;top:var(--hh,65px);z-index:15;padding-bottom:4px;box-shadow:0 8px 8px -8px rgb(0 0 0/.12)}.stick .summary{margin-top:12px}}
+.drawer.wide{width:min(1180px,100%)}.wl{min-width:1050px}.wl td{vertical-align:top}.wl textarea{min-width:200px}.wl tr.nobill td{opacity:.55}.wl input[type=date]{width:140px}
+
+/* stats band (v2) */
+.trio{display:flex;gap:22px}.trio div{display:grid}.trio b{font-size:22px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}.trio b.ok{color:var(--good)}.trio span{font-size:13px;color:var(--muted);white-space:nowrap}
+.summary{display:grid;grid-template-columns:1.4fr 1fr .9fr;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-block:12px 10px}
+.grp{padding:12px 22px;min-width:0}.grp+.grp{border-left:1px solid var(--line)}
+.grp.est{box-shadow:inset 3px 0 0 var(--accent)}
+.grp h3{margin:0 0 2px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;letter-spacing:0;text-transform:none}
+.grp h3 span{font-weight:500;opacity:.85;margin-left:6px}
+.gv{font-size:22px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.25}
+.gv small{font-size:13px;font-weight:500;color:var(--muted)}
+.grp .sub{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.grp .sub span{white-space:nowrap}
+@media (max-width:760px){.summary{grid-template-columns:1fr}.grp+.grp{border-left:0;border-top:1px solid var(--line)}.grp{padding:10px 14px}}
+.more{position:relative}.more>summary{list-style:none;cursor:pointer}.more>summary::-webkit-details-marker{display:none}
+.more .menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgb(0 0 0/.15);padding:6px;display:grid;gap:4px;min-width:220px;z-index:30}
+.more .menu .btn,.more .menu .aptog{width:100%;justify-content:flex-start;border-color:transparent;background:none}
+.more .menu .btn:hover,.more .menu .aptog:hover{background:var(--sunk)}
+.bell.has{border-color:var(--warn);color:var(--ink);background:var(--warn-soft)}.bell .dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
+.cm.new{border-color:var(--warn)}
+.rvseg{margin:0 0 10px;width:fit-content}
+.rtable{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:14px;min-width:820px}
+.rtable th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:10px;border-bottom:1px solid var(--line);background:var(--sunk);position:sticky;top:0}
+.rtable td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.rtable tbody tr{cursor:pointer}.rtable tbody tr:hover td{background:var(--accent-soft)}
+.rtable .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.rtable .c{text-align:center}.rtable tfoot td{border-bottom:0;background:var(--sunk)}
+.chip.st.done{background:var(--good-soft);color:var(--good)}.chip.st.queue{background:var(--sunk);color:var(--muted)}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgb(10 14 12/.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgb(0 0 0/.2)}
+.dhead{display:flex;align-items:center;gap:10px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.dhead h2{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbody{overflow:auto;padding:16px;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));display:grid;gap:16px;align-content:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:700}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 12px}
+label.f{display:grid;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+label.f.wide{grid-column:1/-1}
+.f input,.f select,.f textarea,textarea.big{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:8px 10px;font-size:15px;font-weight:400;color:var(--ink);width:100%;min-width:0}
+.f textarea{min-height:70px;resize:vertical}
+textarea.big{min-height:96px;resize:vertical}
+.ro{font-size:15px;color:var(--ink);font-weight:400}
+.review{border-width:2px}
+.review.approved{border-color:var(--good)} .review.declined{border-color:var(--bad)}
+.rstate{font-weight:700;font-size:15px;margin-bottom:8px}
+.rrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.stages{grid-template-columns:1fr}}
+.stage h4{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between}
+.stage h4 span{color:var(--muted);font-weight:500}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:8px;min-height:92px;display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;align-content:start;background:var(--bg)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.ph{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--sunk);max-width:100%}
+.ph button.open{border:0;padding:0;width:100%;height:100%;display:block;background:none}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph .rot{position:absolute;left:3px;bottom:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgb(0 0 0/.6);color:#fff;font-size:14px;line-height:24px;padding:0}
+.ph .star{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgb(0 0 0/.55);color:#fff;font-size:12px;line-height:22px;padding:0}.ph .star.on{background:#e3a72f;color:#1b2320}
+.ph .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgb(0 0 0/.6);color:#fff;font-size:13px;line-height:22px;padding:0}
+.addph{border:0;border-radius:6px;aspect-ratio:1;background:none;color:var(--accent);font-size:12px;font-weight:600;display:grid;place-items:center;text-align:center;border:1px solid var(--line)}
+.compare{position:relative;border-radius:8px;overflow:hidden;background:var(--sunk);aspect-ratio:4/3;max-width:100%;user-select:none}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.compare .after{clip-path:inset(0 0 0 50%)}
+.compare .bar{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 4px rgb(0 0 0/.5)}
+.compare .lab{position:absolute;bottom:8px;font-size:11px;font-weight:700;color:#fff;background:rgb(0 0 0/.55);padding:2px 7px;border-radius:4px}
+.compare input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.comments{display:grid;gap:10px}
+.cm{border-left:3px solid var(--line);padding-left:10px}
+.cm.fresh{animation:fresh 2s ease-out}@keyframes fresh{from{background:var(--accent-soft)}to{background:transparent}}
+.cm.reviewer{border-color:var(--warn)}
+.cm .h{font-size:12px;color:var(--muted)} .cm .h b{color:var(--ink)}
+.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.costs{width:100%;border-collapse:collapse;font-size:13.5px}
+.costs td,.costs th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.costs th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.costs td.n,.costs th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.ai{background:var(--accent-soft);border-color:transparent}
+.ai p{margin:0 0 8px;font-size:13.5px}
+.privrow{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);cursor:pointer}
+.privrow input{width:18px;height:18px;margin-top:1px;flex:none}
+.privrow b{color:var(--ink)}
+.danger{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* receipts */
+.rlist{display:grid;gap:8px}
+.rrowi{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;cursor:pointer;text-align:left;width:100%}
+.rrowi .thumb{width:52px;height:52px}
+.rwrap{position:relative}.rdel{position:absolute;right:-10px;top:-10px;z-index:2;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--bad);font-size:16px;line-height:22px;padding:0}
+.alloc{display:grid;grid-template-columns:1fr 110px 32px;gap:6px;align-items:center;margin-bottom:6px}
+.alloc select,.alloc input{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:7px 8px;min-width:0;width:100%}
+.remain{font-size:13px;font-weight:600;margin-top:6px}
+.remain.ok{color:var(--good)} .remain.off{color:var(--warn)}
+.filebox{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.filebox .thumb{width:140px;height:180px}.filebox .thumb img{object-fit:contain;background:var(--sunk)}
+.litems{margin-top:10px;font-size:14px}.litems ul{margin:4px 0 0;padding-left:20px;display:grid;gap:2px}
+
+/* lightbox, toast, login */
+.lb{position:fixed;inset:0;background:rgb(0 0 0/.9);z-index:60;display:grid;place-items:center;padding:24px}
+.lb{overflow:auto}.lb img{max-height:86vh;max-width:100%;object-fit:contain;cursor:zoom-in}.lb img.zoomed{max-height:none;max-width:none;width:220%;cursor:zoom-out;align-self:start;justify-self:start}
+.lb::after{content:'Click the image to zoom in or out';position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);color:#fff;font-size:13px;opacity:.8}
+.lb button{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:12px;background:rgb(255 255 255/.15);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;z-index:70;max-width:calc(100% - 32px)}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px))}
+.login .card{width:min(420px,100%);padding:24px;display:grid;gap:14px}
+.login h1{font-size:22px;margin:0}
+.err{color:var(--bad);font-size:13.5px;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section class="login" id="login" hidden>
+  <form class="card" id="loginForm">
+    <div class="brand"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg></div><div><h1>Napa House Repairs</h1><small>Repair proposals, photos and approvals</small></div></div>
+    <label class="f">Your name<input id="lgName" autocomplete="name" required placeholder="e.g. Timothy"></label>
+    <label class="f">Access code<input id="lgCode" autocomplete="off" autocapitalize="characters" required placeholder="From the link you were sent"></label>
+    <div class="err" id="lgErr"></div>
+    <button class="btn primary" type="submit">Open the repair list</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+<header class="top"><div class="wrap">
+  <div class="brand"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg></div>
+    <div><h1>Napa House Repairs</h1><small id="roleLine" hidden></small></div></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabP" aria-selected="true" data-tab="projects">Projects</button>
+    <button role="tab" id="tabS" aria-selected="false" data-tab="show">Before &amp; after</button>
+    <button role="tab" id="tabR" aria-selected="false" data-tab="receipts">Receipts &amp; invoices</button>
+  </nav>
+  <button class="btn bell" id="bellBtn" hidden></button>
+  <button class="btn" id="mgrBtn" hidden>See manager view</button>
+  <div class="who"><span>Signed in as <b id="whoName"></b></span><button class="linkbtn" id="signOut">Sign out</button></div>
+</div></header>
+
+<div class="pvbar" id="pvBar" hidden><div class="wrap"><b>Manager preview.</b> This is exactly what the property manager sees. Buttons don't save anything here. <button class="btn" id="pvExit">Exit preview</button></div></div>
+<main class="wrap">
+  <section id="viewProjects">
+    <div class="stick" id="stick">
+    <div class="summary" id="summary"></div>
+    <div class="toolbar">
+      <div class="seg" id="secSeg">
+        <button aria-pressed="true" data-v="all">All</button><button aria-pressed="false" data-v="Interior">Interior</button><button aria-pressed="false" data-v="Exterior">Exterior</button><button aria-pressed="false" data-v="water">Water &amp; rot</button><button aria-pressed="false" data-v="private" id="privSeg">Private</button>
+      </div>
+      <div class="seg" id="viewSeg"><button aria-pressed="true" data-v="board">Board</button><button aria-pressed="false" data-v="compact">Compact</button><button aria-pressed="false" data-v="grid">Photos</button><button aria-pressed="false" data-v="table">Quick edit</button></div>
+      <select class="small" id="fStatus" aria-label="Filter">
+        <option value="all">Every status</option><option value="needs">Awaiting review</option><option value="approved">Approved</option><option value="declined">Not approved</option>
+        <option value="queue">In queue</option><option value="in_progress">In progress</option><option value="done">Done</option>
+      </select>
+      <span class="spacer"></span>
+      
+      <button class="btn" id="bulkBtn" hidden>Add photos</button>
+      <details class="more" id="moreMenu"><summary class="btn" id="moreBtn">More ▾</summary><div class="menu">
+        <label class="aptog" id="apTog" hidden><input type="checkbox" id="apChk"> Manager approvals</label>
+        <button class="btn" id="titleBtn" hidden>Write titles with AI</button>
+      </div></details>
+      <button class="btn primary" id="newBtn" hidden>+ New project</button>
+    </div>
+    </div>
+    <div class="board" id="board"></div>
+    <ol class="grid" id="tiles" hidden></ol>
+    <ol class="compact" id="compact" hidden></ol>
+    <div class="qe" id="qe" hidden></div>
+    <div class="seg rvseg" id="rvSeg" hidden><button aria-pressed="true" data-rv="cards">Cards</button><button aria-pressed="false" data-rv="table">Table</button></div>
+    <div id="reviewPage" hidden></div>
+    <div id="pEmpty"></div>
+  </section>
+
+  <section id="viewShow" hidden><div id="showPage"></div></section>
+
+  <section id="viewReceipts" hidden>
+    <div class="summary" id="rSummary"></div>
+    <div class="toolbar">
+      <span class="hint" id="rateWrap">Labor is billed to the landlord at <b>$40/hr</b>. The handyman's actual rate and your margin are only visible to editors.</span>
+      <span class="spacer"></span>
+      <button class="btn primary" id="newReceipt" hidden>+ Add receipt or invoice</button>
+    </div>
+    <div class="rlist" id="rlist"></div>
+  </section>
+</main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="dhead"><h2 id="dTitle"></h2><button class="btn ghost" id="dClose">Close</button></div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+<div class="lb" id="lb" hidden><img id="lbImg" alt=""><button id="lbClose">Close</button></div>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="filePick" accept="image/*" multiple hidden>
+<input type="file" id="bulkFiles" accept="image/*" multiple hidden>
+<input type="file" id="newFiles" accept="image/*" multiple hidden>
+<button class="fab" id="fab" hidden aria-label="New project">＋</button>
+<input type="file" id="rFilePick" accept="image/*,application/pdf" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S={me:null,project:[],review:[],comment:[],receipt:[],settings:{},tab:'projects',sec:'all',st:'all',open:null,dragging:false,busy:0};
+const STATUS={queue:'In queue',in_progress:'In progress',done:'Done'};
+const WATER=/leak|water|rain|rot|mold|caulk|flashing|gutter|roof|fascia|siding|trim/i;
+const isWater=p=>p.water??WATER.test((p.title||'')+' '+(p.location||''));
+const tTitle=p=>p.short||p.title;
+const stOf=p=>p.status==='in_progress'||p.status==='done'?p.status:'queue';
+const awaitingOf=p=>!reviewOf(p.id)&&(p.askApproval===true||(p.askApproval==null&&stOf(p)==='queue'));
+const PRI={1:'P1 Urgent',2:'P2 Before rain',3:'P3 Not urgent'};
+const isEd=()=>S.me?.role==='editor'&&!S.preview;
+const apOn=()=>!!S.settings.approvals;
+const realEd=()=>(S.me?.realRole||S.me?.role)==='editor';
+const money=n=>'$'+(Math.round(n*100)/100).toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3200)}
+
+async function api(path,opts={}){
+  const o={...opts,headers:{...(opts.body&&!(opts.body instanceof FormData)?{'content-type':'application/json'}:{}),...opts.headers}};
+  if(o.body&&typeof o.body==='object'&&!(o.body instanceof FormData))o.body=JSON.stringify(o.body);
+  const r=await fetch(path,o);
+  let j={};try{j=await r.json()}catch{}
+  if(r.status===401){showLogin();throw new Error(j.error||'Please sign in.')}
+  if(!r.ok)throw new Error(j.error||('Request failed ('+r.status+')'));
+  return j;
+}
+const save=(kind,id,data,extra={})=>S.preview?(toast('Manager preview: nothing is saved. Exit the preview to make changes.'),Promise.reject(new Error('Preview mode: not saved'))):api('/api/save',{method:'POST',body:{kind,id,data,...extra}});
+
+/* ---------- ranges & money ---------- */
+function range(s){if(s==null)return null;const m=String(s).replace(/[$,\s]/g,'').match(/(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?/);if(!m)return null;const a=+m[1],b=m[2]?+m[2]:a;return[a,b]}
+const RATE=40;const rate=()=>RATE;
+const wsum=r=>{const w=r.wlines||[];const hrs=w.reduce((t,l)=>t+(+l.hours||0),0),bh=w.reduce((t,l)=>t+(l.bill!==false?(+l.billHours||0):0),0),un=w.reduce((t,l)=>t+(l.bill!==false&&!l.projectId?(+l.billHours||0):0),0);return{hrs,bh,un}};
+const billed=r=>r.kind==='labor'?((r.wlines||[]).length?wsum(r).bh:(+r.hours||0))*RATE:(+r.total||0);
+function estimate(p){
+  const m=range(p.materials),h=range(p.hours),l=range(p.labor);
+  let lab=h?[h[0]*rate(),h[1]*rate()]:l;
+  const tot=(m||lab)?[(m?.[0]||0)+(lab?.[0]||0),(m?.[1]||0)+(lab?.[1]||0)]:null;
+  return{m,h,lab,tot,complete:!!(m&&lab)};
+}
+const fmtR=(r,pre='$')=>!r?'—':(r[0]===r[1]?pre+r[0].toLocaleString():pre+r[0].toLocaleString()+'–'+r[1].toLocaleString());
+function actuals(pid){
+  let mat=0,hrs=0,lab=0;const rows=[];
+  for(const r of S.receipt)for(const a of(r.allocations||[])){if(a.projectId!==pid)continue;
+    if(r.kind==='labor'){const h=+a.hours||0,rt=rate();hrs+=h;lab+=h*rt;rows.push({r,txt:h+' hrs',amt:h*rt})}
+    else{const v=+a.amount||0;mat+=v;rows.push({r,txt:'materials',amt:v})}}
+  return{mat,hrs,lab,total:mat+lab,rows};
+}
+function receiptCheck(r){
+  if(r.kind==='labor'&&(r.wlines||[]).length){const w=wsum(r);return{unit:'hrs',tot:w.bh,used:w.bh-w.un,left:Math.round(w.un*100)/100}}
+  if(r.kind==='labor'){const tot=+r.hours||0,used=(r.allocations||[]).reduce((s,a)=>s+(+a.hours||0),0);return{unit:'hrs',tot,used,left:Math.round((tot-used)*100)/100}}
+  const tot=+r.total||0,used=(r.allocations||[]).reduce((s,a)=>s+(+a.amount||0),0);return{unit:'$',tot,used,left:Math.round((tot-used)*100)/100};
+}
+const reviewOf=pid=>S.review.find(r=>r.id===pid&&r.decision);
+const sorted=()=>[...S.project].sort((a,b)=>(a.order??1e9)-(b.order??1e9)||(a.num||0)-(b.num||0));
+const photoUrl=k=>'/api/photo/'+encodeURIComponent(k);
+
+/* ---------- auth ---------- */
+function showLogin(){$('#app').hidden=true;$('#login').hidden=false;closeDrawer()}
+$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();$('#lgErr').textContent='';
+  try{const j=await api('/api/login',{method:'POST',body:{name:$('#lgName').value,code:$('#lgCode').value}});S.me=j.session;
+    history.replaceState(null,'',location.pathname);startApp()}catch(err){$('#lgErr').textContent=err.message}});
+$('#signOut').onclick=async()=>{await fetch('/api/login',{method:'DELETE'});S.me=null;showLogin()};
+
+/* ---------- loading ---------- */
+async function load(quiet){
+  const before=S.comment.length;
+  try{const j=await api('/api/state'+(S.preview?'?as=reviewer':''));Object.assign(S,{project:j.project,review:j.review,comment:j.comment,receipt:j.receipt,settings:j.settings||{},me:j.me});render(quiet);
+    if(quiet&&realEd()&&S.comment.length>before){const n=S.comment.slice(-(S.comment.length-before)).filter(c=>c.by!==S.me.name);if(n.length)toast(`New comment from ${n[0].by}: “${n[0].text.slice(0,60)}”`)}}
+  catch(e){if(!quiet)toast(e.message)}
+}
+function setPreview(on){S.preview=on;closeDrawer();$('#pvBar').hidden=!on;$('#mgrBtn').hidden=on||!realEd();
+  $('#roleLine').textContent=isEd()?'Editor · add, edit and reorder projects':(apOn()?'Reviewer · approve projects and comment':'Repair progress · comment on any project');
+  $('#newBtn').hidden=!isEd();$('#bulkBtn').hidden=!isEd();$('#titleBtn').hidden=!isEd();$('#moreMenu').hidden=!isEd();$('#fab').hidden=!isEd();$('#apTog').hidden=!isEd();$('#privSeg').hidden=!isEd();$('#newReceipt').hidden=!isEd();
+  if(on&&S.sec==='private')S.sec='all';window.scrollTo(0,0);load()}
+function startApp(){
+  $('#login').hidden=true;$('#app').hidden=false;
+  $('#whoName').textContent=S.me.name;
+  $('#roleLine').textContent=isEd()?'Editor · add, edit and reorder projects':(apOn()?'Reviewer · approve projects and comment':'Repair progress · comment on any project');
+  $('#newBtn').hidden=!isEd();$('#fab').hidden=!isEd();$('#bulkBtn').hidden=!isEd();$('#privSeg').hidden=!isEd();$('#apTog').hidden=!isEd();$('#moreMenu').hidden=!isEd();$('#titleBtn').hidden=!isEd();$('#newReceipt').hidden=!isEd();
+
+  if(isEd())api('/api/migrate',{method:'POST'}).then(j=>{if(j.added){toast(`${j.added} new projects added`);load()}}).catch(()=>{});
+  $('#mgrBtn').hidden=!isEd();$('#mgrBtn').onclick=()=>setPreview(true);$('#pvExit').onclick=()=>setPreview(false);
+  load();
+  clearInterval(startApp._p);startApp._p=setInterval(()=>{if(document.visibilityState==='visible'&&!S.dragging&&!S.busy)load(true)},20000);
+}
+
+/* ---------- render ---------- */
+function render(quiet){
+  renderSummary();renderTiles();renderReceipts();renderShow();
+  if(S.open&&!(quiet&&$('#drawer').contains(document.activeElement)))renderDrawer();
+}
+function stat(k,v){return`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`}
+const hrsTxt=r=>!r?'':fmtR(r,'')+(r[1]===1?' hr':' hrs');
+const seenKey='nhrSeen';const getSeen=()=>{try{return localStorage.getItem(seenKey)||''}catch{return''}};
+function renderBell(){const b=$('#bellBtn');if(!b)return;if(!realEd()||S.preview){b.hidden=true;return}
+  const seen=getSeen(),nw=S.comment.filter(c=>c.at>seen&&c.by!==S.me.name);b.hidden=false;
+  b.innerHTML=nw.length?`<span class="dot"></span>${nw.length} new comment${nw.length>1?'s':''}`:'Comments';b.classList.toggle('has',!!nw.length);
+  if(nw.length&&!renderBell._n){document.title=`(${nw.length}) Napa House Repairs`}else if(!nw.length)document.title='Napa House Repairs';renderBell._last=nw.length}
+function drawComments(){$('#dTitle').textContent='Comments';const seen=getSeen();
+  const list=[...S.comment].sort((a,b)=>b.at.localeCompare(a.at));
+  $('#dBody').innerHTML=`<div class="card"><div class="comments">${list.map(c=>{const p=S.project.find(x=>x.id===c.projectId);return`<div class="cm ${c.role}${c.at>seen&&c.by!==S.me.name?' fresh new':''}">
+    <div class="h"><b>${esc(c.by)}</b> · ${c.role==='reviewer'?'Manager':'Editor'} · ${new Date(c.at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${p?`<button class="linkbtn" data-openp="${p.id}">#${p.num} ${esc(tTitle(p))}</button>`:'(project removed)'}</div><p>${esc(c.text)}</p></div>`}).join('')||'<p class="hint">No comments yet.</p>'}</div></div>`;
+  $('#dBody').querySelectorAll('[data-openp]').forEach(b=>b.onclick=()=>openProject(b.dataset.openp));
+  try{localStorage.setItem(seenKey,new Date().toISOString())}catch{};renderBell()}
+function renderSummary(){
+  renderBell();
+  if(S.me)$('#roleLine').textContent=isEd()?'Editor · add, edit and reorder projects':(apOn()?'Reviewer · approve projects and comment':'Repair progress · comment on any project');
+  if($('#apChk'))$('#apChk').checked=apOn();
+  const ps=S.project.filter(p=>!p.private),nPriv=S.project.length-ps.length;
+  let need=0,ok=0,no=0,needT=[0,0],okT=[0,0],allT=[0,0];
+  for(const p of ps){const r=reviewOf(p.id),e=estimate(p),t=e.tot||[0,0];allT[0]+=t[0];allT[1]+=t[1];
+    const awaiting=awaitingOf(p);
+    if(awaiting){need++;needT[0]+=t[0];needT[1]+=t[1]}else if(r?.decision==='declined')no++;else{ok++;okT[0]+=t[0];okT[1]+=t[1]}}
+  const spent=S.receipt.filter(r=>!r.private).reduce((s,r)=>s+billed(r),0);
+  const labSpent=S.receipt.filter(r=>!r.private&&r.kind==='labor').reduce((s,r)=>s+billed(r),0),matSpent=spent-labSpent;
+  let eh=[0,0],em=[0,0];for(const p of ps){const e=estimate(p);if(e.h){eh[0]+=e.h[0];eh[1]+=e.h[1]}if(e.m){em[0]+=e.m[0];em[1]+=e.m[1]}}
+  const R=r=>!r||(!r[0]&&!r[1])?'—':(r[0]===r[1]?money(r[0]):`${money(r[0])}&thinsp;–&thinsp;${money(r[1])}`);
+  const nIP=ps.filter(p=>stOf(p)==='in_progress').length,nD=ps.filter(p=>stOf(p)==='done').length;
+  $('#summary').innerHTML=
+   `<section class="grp est"><h3>Estimate <span>labor $40/hr + parts</span></h3><div class="gv">${R(allT)}</div>
+      <div class="sub"><span>Labor ${R([eh[0]*RATE,eh[1]*RATE])} · ${fmtR(eh,'')} hrs</span><span>Materials ${R(em)}</span></div></section>
+    <section class="grp"><h3>Spent so far</h3><div class="gv">${money(Math.round(spent))}</div>
+      <div class="sub"><span>Labor ${money(Math.round(labSpent))}</span><span>Materials ${money(Math.round(matSpent))}</span></div></section>
+    <section class="grp"><h3>Progress${nPriv&&isEd()?` <span>+ ${nPriv} private</span>`:''}</h3><div class="trio">
+      <div><b>${ps.length}</b><span>Projects</span></div><div><b>${nIP}</b><span>In progress</span></div><div><b class="ok">${nD}</b><span>Done</span></div></div></section>`;
+}
+function chipsFor(p){
+  const r=reviewOf(p.id),out=[];
+  if(p.private&&isEd())out.push('<span class="chip priv">Private</span>');
+  out.push(`<span class="chip p${p.priority||2}">${PRI[p.priority||2]}</span>`);
+  if(isWater(p))out.push('<span class="chip water">Water / rot</span>');
+  if(!apOn()&&!isEd()){}
+  else if(r)out.push(`<span class="chip ${r.decision}">${r.decision==='approved'?'Approved':'Not approved'}</span>`);
+  else if(awaitingOf(p))out.push('<span class="chip pending">Approval requested</span>');
+  if(!(S.view==='board'&&isEd())&&stOf(p)!=='queue')out.push(`<span class="chip st">${STATUS[stOf(p)]}</span>`);
+  const n=S.comment.filter(c=>c.projectId===p.id).length;if(n)out.push(`<span class="chip">${n} comment${n>1?'s':''}</span>`);
+  return out.join('');
+}
+function visible(){
+  return sorted().filter(p=>{if(S.sec==='private')return!!p.private;if(p.private&&S.view!=='table')return false;if(S.sec==='water'){if(!isWater(p))return false}else if(S.sec!=='all'&&p.section!==S.sec)return false;const r=reviewOf(p.id);
+    if(S.st==='all')return true;if(S.st==='needs')return awaitingOf(p);if(S.st==='approved'||S.st==='declined')return r?.decision===S.st;returnstOf(p)===S.st});
+}
+const grip='<svg viewBox="0 0 10 16" fill="currentColor"><circle cx="2.5" cy="2.5" r="1.5"/><circle cx="7.5" cy="2.5" r="1.5"/><circle cx="2.5" cy="8" r="1.5"/><circle cx="7.5" cy="8" r="1.5"/><circle cx="2.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/></svg>';
+const COLS=[['queue','In queue'],['in_progress','In progress'],['done','Done']];
+try{const v=localStorage.getItem('nhrView');if(['board','grid','table','compact'].includes(v))S.view=v}catch{}
+S.view=S.view||'board';
+const lastOf=(p,st)=>[...(p.photos||[])].reverse().find(x=>x.stage===st);
+const pinned=p=>(p.photos||[]).find(x=>x.key===p.cover);
+const beforeOf=p=>{const c=pinned(p);return c&&c.stage==='before'?c:lastOf(p,'before')};
+const coverOf=p=>pinned(p)||lastOf(p,'after')||lastOf(p,'during')||lastOf(p,'before');
+const photoCount=p=>{const c={before:0,during:0,after:0};(p.photos||[]).forEach(x=>c[x.stage]=(c[x.stage]||0)+1);return c};
+function costLine(p){const e=estimate(p),a=actuals(p.id);
+  return `<div class="money"><div><span>Hours</span><b class="num">${e.h?fmtR(e.h,''):'—'}</b></div><div><span>Parts</span><b class="num">${e.m?fmtR(e.m):'—'}</b></div><div><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>Actual</span><b class="num">${a.total?money(a.total):'—'}</b></div></div>`}
+function cardHTML(p,pos,big){
+  const cv=coverOf(p),c=photoCount(p);
+  return`<li class="card2${big?' big':''}${p.private?' private':''}" data-id="${p.id}">
+    <div class="ph2" data-open="${p.id}">${cv?`<img loading="lazy" src="${photoUrl(cv.key)}" alt="">`:'<span>No photo yet</span>'}
+      <span class="badge">#${esc(p.num)}</span>
+      ${isEd()?`<button class="handle" aria-label="Drag to move">${grip}</button>`:''}
+      <span class="pcount">${c.before?c.before+' before':''}${c.during?' · '+c.during+' during':''}${c.after?' · '+c.after+' after':''}</span></div>
+    <button class="cbody" data-open="${p.id}">
+      <div class="tmeta"><span>${esc(p.location)}</span></div>
+      <div class="ttitle">${esc(tTitle(p))}</div>
+      <div class="chips">${chipsFor(p)}</div>
+      <div class="cost">${costLine(p)}</div>
+    </button>
+    ${isEd()?`<div class="quick"><label class="done"><input type="checkbox" data-done="${p.id}"${p.status==='done'?' checked':''}> Done</label><label class="done ask"><input type="checkbox" data-ask="${p.id}"${awaitingOf(p)||p.askApproval===true?' checked':''}> Ask approval</label>
+      <select data-st="${p.id}" aria-label="Status"${S.view==='board'?' hidden':''}>${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${stOf(p)===k?' selected':''}>${v}</option>`).join('')}<option value="__delete">Delete project…</option></select></div>`:''}</li>`;
+}
+function renderTiles(){
+  if(S.dragging)return;
+  const all=sorted();
+  const list=visible();
+  $('#viewSeg').hidden=!isEd();
+  [...$('#viewSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.view));
+  const rev=!isEd();
+  $('#reviewPage').hidden=!rev;$('#board').hidden=rev||S.view!=='board';$('#tiles').hidden=rev||S.view!=='grid';$('#qe').hidden=rev||S.view!=='table';$('#compact').hidden=rev||S.view!=='compact';
+  $('#fStatus').hidden=rev||S.view==='board';
+  if(!rev&&S.view==='table'&&!$('#qe').contains(document.activeElement))renderQE(list,all);
+  $('#rvSeg').hidden=!rev;[...$('#rvSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.rv===(S.rview||'cards')));
+  if(rev)(S.rview==='table'?renderRTable(list):renderReview(list,all));
+  else if(S.view==='board'){
+    $('#board').innerHTML=COLS.map(([st,label])=>{const items=list.filter(p=>stOf(p)===st);
+      return`<section class="col"><h3><span>${label}</span><span class="num">${items.length}</span></h3><ol class="colList" data-status="${st}">${items.map(p=>cardHTML(p,all.indexOf(p)+1)).join('')}</ol></section>`}).join('');
+    $('#board').querySelectorAll('.colList').forEach(ol=>Sortable.create(ol,{group:'board',handle:'.handle',animation:160,
+      onStart(){S.dragging=true},onEnd:onDragEnd}));
+  } else if(S.view==='compact'){
+    $('#compact').innerHTML=list.map((p,i)=>{const cv=coverOf(p),e=estimate(p);return`<li class="crow" data-id="${p.id}">
+      <button class="handle" aria-label="Drag to reorder">${grip}</button>
+      <span class="cpos num">${i+1}</span>
+      <div class="cthumb" data-open="${p.id}">${cv?`<img loading="lazy" src="${photoUrl(cv.key)}" alt="">`:''}</div>
+      <div class="cmain" data-open="${p.id}"><div class="ctitle"><span class="ref">#${esc(p.num)}</span> ${esc(tTitle(p))}</div></div>
+      <span class="chip p${p.priority||2}">P${p.priority||2}</span>${stOf(p)!=='queue'?`<span class="chip st">${stOf(p)==='done'?'Done':'In prog.'}</span>`:'<span></span>'}</li>`}).join('');
+  } else {
+    $('#tiles').innerHTML=list.map(p=>cardHTML(p,all.indexOf(p)+1,true)).join('');
+  }
+  const em=$('#pEmpty');
+  if(!S.project.length){em.innerHTML=`<div class="empty"><h3>No projects yet</h3>${isEd()?`<p>Load the 46 items and photos from the handyman's Sept 29 work-estimates document, or add projects one at a time.</p><button class="btn primary" id="seedBtn">Load the estimates document</button>`:'<p>Projects will appear here once they are added.</p>'}</div>`;
+    const b=$('#seedBtn');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Loading 46 projects…';try{const j=await api('/api/seed',{method:'POST'});toast(`Loaded ${j.count} projects`);await api('/api/migrate',{method:'POST'}).catch(()=>{});load()}catch(e){toast(e.message);b.disabled=false;b.textContent='Load the estimates document'}}}
+  else em.innerHTML=list.length?'':'<div class="empty">No projects match this filter.</div>';
+}
+async function onDragEnd(ev){
+  S.dragging=false;
+  const to=ev.to,id=ev.item.dataset.id;
+  const ids=[...to.children].map(li=>li.dataset.id),i=ids.indexOf(id);
+  const get=x=>S.project.find(p=>p.id===x),p=get(id);
+  const prev=get(ids[i-1]),next=get(ids[i+1]);
+  let o=p.order;
+  if(prev&&next)o=(prev.order+next.order)/2;else if(prev)o=prev.order+0.5;else if(next)o=next.order-0.5;
+  const patch={order:o};
+  if(to.dataset.status&&to.dataset.status!==stOf(p))patch.status=to.dataset.status;
+  if(ev.from===to&&ev.oldIndex===ev.newIndex)return renderTiles();
+  Object.assign(p,patch);renderTiles();renderSummary();
+  try{await save('project',id,patch);if(patch.status)toast(`Moved to ${STATUS[patch.status]}`)}catch(e){toast(e.message);load()}
+}
+async function delProject(id,el){const p=S.project.find(x=>x.id===id);if(!p)return;
+  if(!confirm(`Delete #${p.num} "${tTitle(p)}"? Its photos and approval are removed too. This can't be undone.`)){if(el)el.value=stOf(p);return}
+  try{await save('project',id,null,{delete:true});S.project=S.project.filter(x=>x.id!==id);render();toast('Project deleted')}catch(e){toast(e.message);load()}}
+async function setStatus(id,st){if(st==='__delete')return delProject(id);const p=S.project.find(x=>x.id===id);if(!p||stOf(p)===st)return;p.status=st;renderTiles();renderSummary();
+  try{await save('project',id,{status:st});toast(st==='done'?'Marked done':`Status: ${STATUS[st]}`)}catch(e){toast(e.message);load()}}
+$('#viewProjects').addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.done)setStatus(t.dataset.done,t.checked?'done':'in_progress');
+  else if(t.dataset.ask){const p=S.project.find(x=>x.id===t.dataset.ask);p.askApproval=t.checked;renderTiles();renderSummary();save('project',p.id,{askApproval:t.checked}).then(()=>toast(t.checked?'Manager will be asked to approve':'Approval request removed')).catch(e=>toast(e.message))}
+  else if(t.dataset.st){if(t.value==='__delete')delProject(t.dataset.st,t);else setStatus(t.dataset.st,t.value)}});
+$('#viewProjects').addEventListener('click',e=>{const cm=e.target.closest('[data-cmt]');if(cm){openProject(cm.dataset.cmt);setTimeout(()=>{const t=$('#cmText');if(t){t.scrollIntoView({block:'center'});t.focus()}},80);return}if(e.target.closest('.handle')||e.target.closest('.quick'))return;const b=e.target.closest('[data-open]');if(b)openProject(b.dataset.open)});
+$('#secSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.sec=b.dataset.v;[...$('#secSeg').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderTiles()});
+$('#viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.view=b.dataset.v;try{localStorage.setItem('nhrView',S.view)}catch{};renderTiles()});
+$('#fStatus').onchange=e=>{S.st=e.target.value;renderTiles()};
+Sortable.create($('#tiles'),{handle:'.handle',animation:160,onStart(){S.dragging=true},onEnd:onDragEnd});
+Sortable.create($('#compact'),{handle:'.handle',animation:140,onStart(){S.dragging=true},onEnd:onDragEnd});
+
+
+/* ---------- quick edit panel ---------- */
+function renderQE(list,all){
+  const sel=(id,k,opts,v)=>`<select data-q="${id}" data-k="${k}" aria-label="${k}">${opts.map(([a,b])=>`<option value="${a}"${String(a)===String(v)?' selected':''}>${b}</option>`).join('')}</select>`;
+  $('#qe').innerHTML=`<div class="scroll"><table class="qt"><thead><tr><th>#</th><th>Photo</th><th>Where / what</th><th>Priority</th><th>Status</th><th class="c">Ask approval</th><th class="c">Done</th><th class="c">Private</th><th>Hours</th><th>Parts $</th><th class="n">Est. total</th></tr></thead><tbody>
+  ${list.map(p=>{const cv=coverOf(p),e=estimate(p);return`<tr data-id="${p.id}" class="${p.private?'private':''} ${p.status==='done'?'isdone':''}">
+    <td class="num">${esc(p.num)}</td>
+    <td><button class="qthumb" data-open="${p.id}" aria-label="Open photos">${cv?`<img loading="lazy" src="${photoUrl(cv.key)}" alt="">`:'+'}</button></td>
+    <td class="wide"><input data-q="${p.id}" data-k="location" value="${esc(p.location)}" aria-label="Where"><textarea data-q="${p.id}" data-k="title" rows="2" aria-label="What">${esc(p.title)}</textarea></td>
+    <td>${sel(p.id,'priority',[[1,'1 Urgent'],[2,'2 Before rain'],[3,'3 Not urgent']],p.priority||2)}</td>
+    <td>${sel(p.id,'status',[...Object.entries(STATUS),['__delete','Delete project…']],stOf(p))}</td>
+    <td class="c"><input type="checkbox" data-q="${p.id}" data-k="ask"${awaitingOf(p)||p.askApproval===true?' checked':''} aria-label="Ask approval"></td>
+    <td class="c"><input type="checkbox" data-q="${p.id}" data-k="done"${p.status==='done'?' checked':''} aria-label="Done"></td>
+    <td class="c"><input type="checkbox" data-q="${p.id}" data-k="private"${p.private?' checked':''} aria-label="Private"></td>
+    <td><input class="sm num" data-q="${p.id}" data-k="hours" value="${esc(p.hours||'')}" placeholder="?" aria-label="Hours"></td>
+    <td><input class="sm num" data-q="${p.id}" data-k="materials" value="${esc(p.materials||'')}" placeholder="?" aria-label="Parts"></td>
+    <td class="n num">${e.tot?fmtR(e.tot):'—'}</td></tr>`}).join('')}</tbody></table></div>
+  <p class="hint">Changes save as soon as you leave a field. Click a photo to open the full project.</p>`;
+}
+$('#qe').addEventListener('change',async e=>{const t=e.target,id=t.dataset.q;if(!id)return;const p=S.project.find(x=>x.id===id);if(!p)return;
+  let patch;const k=t.dataset.k;
+  if(k==='status'&&t.value==='__delete')return delProject(id,t);
+  if(k==='done')patch={status:t.checked?'done':'in_progress'};
+  else if(k==='private')patch={private:t.checked};
+  else if(k==='ask')patch={askApproval:t.checked};
+  else patch={[k]:k==='priority'?+t.value:t.value.trim()};
+  Object.assign(p,patch);renderSummary();
+  try{const j=await save('project',id,patch);Object.assign(p,j.record);toast('Saved');
+    if(k==='done'||k==='ask'||k==='status'||k==='private'||k==='hours'||k==='materials'){t.blur();renderTiles()}}catch(err){toast(err.message);load()}});
+
+$('#apChk').onchange=async e=>{const on=e.target.checked;S.settings.approvals=on;render();
+  try{const j=await save('settings',null,{approvals:on});S.settings=j.record;toast(on?'Approve / Not approved buttons are now on for the manager':'Approval buttons are off; the manager sees a progress report')}catch(err){toast(err.message)}};
+document.addEventListener('click',e=>{const m=$('#moreMenu');if(m&&m.open&&!m.contains(e.target))m.open=false});
+/* ---------- AI titles ---------- */
+$('#titleBtn').onclick=async()=>{const b=$('#titleBtn');const todo=sorted().filter(p=>!p.short);
+  if(!todo.length)return toast('Every project already has a title');
+  b.disabled=true;S.busy++;let done=0;
+  try{for(let i=0;i<todo.length;i+=15){const chunk=todo.slice(i,i+15);b.textContent=`Writing titles ${i+1}–${Math.min(i+15,todo.length)} of ${todo.length}…`;
+      const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'titles',projects:chunk.map(p=>({id:p.id,location:p.location,title:p.title}))}});
+      for(const it of f.items||[]){const p=S.project.find(x=>x.id===it.id);if(!p||!it.short)continue;
+        const j=await save('project',p.id,{short:it.short,why:it.why||'',water:!!it.water});Object.assign(p,j.record);done++}
+      render()}
+    toast(`${done} titles written. Edit any in the project panel.`)}
+  catch(e){toast(e.message)}finally{S.busy--;b.disabled=false;b.textContent='Write titles with AI'}};
+
+/* ---------- before & after showcase ---------- */
+function renderShow(){
+  const ps=sorted().filter(p=>!(p.private&&!isEd())&&(p.photos||[]).some(x=>x.stage==='after'));
+  const total=ps.reduce((t,p)=>t+actuals(p.id).total,0);
+  $('#showPage').innerHTML=`<div class="showhead"><h2>Before &amp; after</h2><p class="intro">${ps.length?`${ps.length} repair${ps.length>1?'s':''} with before and after photos${total?`, ${money(total)} spent`:''}. Drag the slider on each photo to compare.`:'Finished projects appear here once they have an "after" photo. Add one in a project\'s After box.'}</p></div>
+  <div class="showgrid">${ps.map(p=>{const b=beforeOf(p),a=lastOf(p,'after'),ac=actuals(p.id);
+    return`<article class="showcard">${b?`<div class="compare"><img src="${photoUrl(b.key)}" alt="Before"><img class="after" src="${photoUrl(a.key)}" alt="After"><div class="bar"></div><span class="lab" style="left:8px">Before</span><span class="lab" style="right:8px">After</span><input type="range" min="0" max="100" value="50" aria-label="Compare"></div>`:`<div class="ph2"><img src="${photoUrl(a.key)}" alt="After"></div>`}
+      <div class="sbody"><div class="tmeta"><span class="ref">#${esc(p.num)}</span><span>·</span><span>${esc(p.location)}</span></div><h3>${esc(tTitle(p))}</h3>
+      <div class="hint">${stOf(p)==='done'?'Done':STATUS[stOf(p)]}${ac.total?` · ${money(ac.total)} spent`:''}</div>
+      <button class="linkbtn" data-open="${p.id}">Details</button></div></article>`}).join('')}</div>`;
+  $('#showPage').querySelectorAll('.compare input').forEach(inp=>inp.oninput=()=>{const c=inp.parentElement;c.querySelector('.after').style.clipPath=`inset(0 0 0 ${inp.value}%)`;c.querySelector('.bar').style.left=inp.value+'%'});
+}
+$('#showPage').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openProject(b.dataset.open)});
+
+/* ---------- reviewer table ---------- */
+function renderRTable(list){
+  const order={in_progress:0,done:1,queue:2};const rows=[...list].sort((a,b)=>order[stOf(a)]-order[stOf(b)]||(a.priority||2)-(b.priority||2)||(+a.num)-(+b.num));
+  let tE=[0,0],tS=0;
+  const body=rows.map(p=>{const e=estimate(p),a=actuals(p.id),n=S.comment.filter(c=>c.projectId===p.id).length;if(e.tot){tE[0]+=e.tot[0];tE[1]+=e.tot[1]}tS+=a.total;
+    return`<tr data-open="${p.id}"><td class="num">#${esc(p.num)}</td><td><b>${esc(tTitle(p))}</b><div class="hint">${esc(p.location)}</div></td>
+      <td><span class="chip st ${stOf(p)}">${STATUS[stOf(p)]}</span></td><td><span class="chip p${p.priority||2}">P${p.priority||2}</span>${isWater(p)?' <span class="chip water">Water</span>':''}</td>
+      <td class="n">${e.h?fmtR(e.h,''):'—'}</td><td class="n">${e.m?fmtR(e.m):'—'}</td><td class="n">${e.tot?fmtR(e.tot):'—'}</td><td class="n">${a.total?money(Math.round(a.total)):'—'}</td>
+      <td class="c">${n?`<button class="linkbtn" data-cmt="${p.id}">${n}</button>`:`<button class="linkbtn" data-cmt="${p.id}">Add</button>`}</td></tr>`}).join('');
+  $('#reviewPage').innerHTML=`<div class="scroll"><table class="rtable"><thead><tr><th>#</th><th>Project</th><th>Status</th><th>Priority</th><th class="n">Hours</th><th class="n">Parts</th><th class="n">Estimate</th><th class="n">Spent</th><th class="c">Comments</th></tr></thead>
+    <tbody>${body}</tbody><tfoot><tr><td></td><td><b>${rows.length} projects</b></td><td></td><td></td><td></td><td></td><td class="n"><b>${fmtR(tE)}</b></td><td class="n"><b>${money(Math.round(tS))}</b></td><td></td></tr></tfoot></table></div>
+    <p class="hint">Click any row to see photos and details.</p>`;
+}
+$('#rvSeg').addEventListener('click',e=>{const b=e.target.closest('[data-rv]');if(!b)return;S.rview=b.dataset.rv;try{localStorage.setItem('nhrRv',S.rview)}catch{};renderTiles()});
+try{S.rview=localStorage.getItem('nhrRv')||'cards'}catch{}
+/* ---------- reviewer page ---------- */
+function renderReview(list,all){
+  const byP=a=>[...a].sort((x,y)=>(x.priority||2)-(y.priority||2)||(x.order??0)-(y.order??0));
+  const groups=!apOn()?[['In progress',list.filter(p=>stOf(p)==='in_progress')],['Done',list.filter(p=>stOf(p)==='done')],['Planned',list.filter(p=>stOf(p)==='queue')]]:[
+    ['Needs your approval',list.filter(p=>awaitingOf(p))],
+    ['Approved / decided',list.filter(p=>reviewOf(p.id)&&stOf(p)==='queue')],
+    ['In progress',list.filter(p=>!awaitingOf(p)&&stOf(p)==='in_progress'&&!(reviewOf(p.id)&&false))],
+    ['Done',list.filter(p=>!awaitingOf(p)&&stOf(p)==='done')],
+    ['Planned',list.filter(p=>!awaitingOf(p)&&!reviewOf(p.id)&&stOf(p)==='queue')],
+  ];
+  const nW=list.filter(isWater).length;
+  $('#reviewPage').innerHTML=`${nW?`<div class="waterbar"><b>${nW} of ${list.length} projects involve water getting into the house</b> (leaks, rot, failed caulking or flashing). These get worse with each rain, so they are marked <span class="chip water">Water / rot</span>.</div>`:''}<p class="intro">Our laborers bill at a discounted $40 an hour, which covers painting, construction, repair, plumbing and electrical. Estimates are by our handyman. ${apOn()?'These are the repairs proposed for the house. Each one shows photos, the estimated cost, and what has been spent so far. Approve each project, or mark it not approved and leave a comment.':'This is the repair work on the house: what is in progress, what is done, and what is planned, with photos, estimated cost and what has been spent. Tap Details on any project to leave a comment or question.'}</p>`+
+   groups.filter(g=>g[1].length).map(([h,ps])=>`<h2 class="rsec">${h} <span class="num">${ps.length}</span></h2><div class="rcards">${byP(ps).map(p=>reviewCard(p)).join('')}</div>`).join('');
+  $('#reviewPage').querySelectorAll('[data-ap]').forEach(b=>b.onclick=async e=>{e.stopPropagation();const id=b.dataset.ap;
+    try{const j=await save('review',id,{decision:'approved'});upsert('review',j.record);load(true);render();toast('Approved')}catch(err){toast(err.message)}});
+  $('#reviewPage').querySelectorAll('[data-no]').forEach(b=>b.onclick=e=>{e.stopPropagation();openProject(b.dataset.no);setTimeout(()=>{$('#revNote')?.focus();toast('Add a comment, then tap Not approved')},80)});
+  $('#reviewPage').querySelectorAll('.compare input').forEach(inp=>inp.oninput=()=>{const c=inp.parentElement;c.querySelector('.after').style.clipPath=`inset(0 0 0 ${inp.value}%)`;c.querySelector('.bar').style.left=inp.value+'%'});
+}
+function reviewCard(p,pos){
+  const r=reviewOf(p.id),ph=p.photos||[],b=beforeOf(p),a=lastOf(p,'after'),e=estimate(p),ac=actuals(p.id);
+  const pics=b&&a?`<div class="compare"><img src="${photoUrl(b.key)}" alt="Before"><img class="after" src="${photoUrl(a.key)}" alt="After"><div class="bar"></div><span class="lab" style="left:8px">Before</span><span class="lab" style="right:8px">After</span><input type="range" min="0" max="100" value="50" aria-label="Compare before and after"></div>`
+    :(coverOf(p)?`<div class="ph2" data-open="${p.id}"><img loading="lazy" src="${photoUrl(coverOf(p).key)}" alt=""></div>`:'<div class="ph2"><span>No photo yet</span></div>');
+  const n=S.comment.filter(c=>c.projectId===p.id).length;
+  return`<article class="rcard ${apOn()?(r?.decision||''):''}">
+    <div class="rpics">${pics}${ph.length>1?`<button class="linkbtn" data-open="${p.id}">See all ${ph.length} photos</button>`:''}</div>
+    <div class="rinfo">
+      <div class="tmeta"><span class="ref">#${esc(p.num)}</span><span>·</span><span>${esc(p.location)}</span><span>·</span><span>${esc(p.section||'')}</span></div>
+      <h3>${esc(tTitle(p))}</h3>${p.why?`<p class="why">${esc(p.why)}</p>`:''}${p.short?`<p class="orig">Notes: ${esc(p.title)}</p>`:''}
+      <div class="chips">${chipsFor(p)}</div>
+      <dl class="facts"><div><dt>Est. labor</dt><dd class="num">${e.h?hrsTxt(e.h):'Pending'}</dd></div><div><dt>Est. parts</dt><dd class="num">${e.m?fmtR(e.m):'Pending'}</dd></div><div><dt>Est. total</dt><dd class="num">${e.tot?fmtR(e.tot):'Pending'}</dd></div>${ac.total?`<div><dt>Spent</dt><dd class="num">${money(ac.total)}</dd></div>`:''}</dl>
+      <div class="rrow">
+        ${apOn()?`<button class="btn good ${r?.decision==='approved'?'':'off'}" data-ap="${p.id}">${r?.decision==='approved'?'✓ Approved':'Approve'}</button>
+        <button class="btn bad ${r?.decision==='declined'?'on':''}" data-no="${p.id}">Not approved</button>`:''}
+        <button class="btn ${apOn()?'ghost':''}" data-cmt="${p.id}">Details${n?` · ${n} comment${n>1?'s':''}`:' & comment'}</button>
+      </div>
+    </div></article>`;
+}
+
+
+/* ---------- duplicate detection (perceptual hash, survives resizing) ---------- */
+let lastDims=0;
+async function dhashFromSrc(src){
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});lastDims=img.naturalWidth*img.naturalHeight;
+  const c=document.createElement('canvas');c.width=9;c.height=8;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,9,8);
+  const d=x.getImageData(0,0,9,8).data,g=[];for(let i=0;i<72;i++)g.push(d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11);
+  let bits='';for(let y=0;y<8;y++)for(let k=0;k<8;k++)bits+=g[y*9+k]>g[y*9+k+1]?'1':'0';return bits}
+const ham=(a,b)=>{let n=0;for(let i=0;i<64;i++)if(a[i]!==b[i])n++;return n};
+let knownHashes=null;
+async function loadKnown(){
+  if(knownHashes)return knownHashes;knownHashes=[];
+  const list=[];for(const p of S.project)for(const ph of p.photos||[])list.push({key:ph.key,where:`#${p.num} ${p.location}`,pid:p.id});
+  for(const r of S.receipt)if(r.file&&r.file.type!=='application/pdf')list.push({key:r.file.key,where:'a receipt'});
+  try{const{photos:o}=await api('/api/orphans');for(const x of o)list.push({key:x.key,where:'the unsorted photos'})}catch{}
+  let i=0;const w=async()=>{while(i<list.length){const x=list[i++];try{const h=await dhashFromSrc(photoUrl(x.key));knownHashes.push({h,px:lastDims,key:x.key,pid:x.pid,where:x.where})}catch{}}};
+  await Promise.all([w(),w(),w(),w(),w(),w()]);return knownHashes}
+function findDup(h){let best=null;for(const k of knownHashes||[]){const d=ham(h,k.h);if(d<=6&&(!best||d<best.d))best={...k,d}}return best}
+
+/* ---------- bulk photo drop ---------- */
+let bulk=[];
+$('#bulkBtn').onclick=()=>{bulk=[];S.open={type:'bulk'};openDrawer();renderDrawer();loadOrphans()};
+async function loadOrphans(){try{const{photos:ph}=await api('/api/orphans');const have=new Set(bulk.map(x=>x.key));
+  const add=ph.filter(x=>!have.has(x.key)).map(x=>({key:x.key,state:'ready',stage:'before',projectId:'',note:'Unsorted from an earlier upload',preview:photoUrl(x.key),orphan:true}));
+  if(add.length){bulk.push(...add);if(S.open?.type==='bulk')drawBulk()}}catch(e){}}
+function drawBulk(){
+  $('#dTitle').textContent='Add photos';
+  const opts=[...S.project].sort((a,b)=>(+a.num||0)-(+b.num||0)).map(p=>`<option value="${p.id}">#${p.num} ${esc(p.location)} · ${esc(tTitle(p).slice(0,44))}</option>`).join('');
+  const pending=bulk.filter(x=>x.state!=='ready'&&x.state!=='error').length;const nRec=bulk.filter(x=>x.projectId==='RECEIPT').length;
+  $('#dBody').innerHTML=`
+  <div class="card ai"><h3>Drop a pile of photos</h3>
+    <p>Drag in as many photos as you like from your laptop. Photos already on the site are recognized even at a different size: if your copy is sharper it replaces the old one, otherwise it's skipped. AI looks at each new one, picks the project it belongs to, and decides whether it's a before, during or after shot. Receipts and invoices are spotted too: they go to the Receipts &amp; invoices tab, already read and split across projects. Check the matches, fix any that are wrong, then save.</p>
+    <label class="privrow" style="margin:0 0 10px;border:0;padding:0"><input type="checkbox" id="upOnly"${S.upOnly?' checked':''}> <span><b>Only upgrade existing photos</b>: replace the low-res photos with sharper copies and ignore everything else (nothing new is added).</span></label>
+    <div class="bigdrop" id="bigDrop"><b>Drop photos here</b><span>or</span><button class="btn" id="bulkPick">Choose photos</button></div>
+    <div class="rrow"><button class="btn" id="dedupe">Remove low-res duplicates already on projects</button><span class="hint" id="dedupeMsg"></span></div>
+  </div>
+  ${bulk.length?`<div class="card"><h3>${bulk.length} photo${bulk.length>1?'s':''}${pending?` · sorting ${pending}…`:''}${bulk.filter(x=>x.key&&!x.projectId).length?` · ${bulk.filter(x=>x.key&&!x.projectId).length} still need a project`:''}</h3>
+    <div class="blist">${bulk.map((x,i)=>`<div class="brow">
+      <button class="thumb zoom" data-zoom="${i}" aria-label="See larger">${x.preview?`<img src="${x.preview}" alt="">`:''}</button>
+      <div class="bfields">
+        <select data-bi="${i}" data-f="projectId"><option value="">${x.state==='ready'||x.state==='error'?'Choose project…':'Sorting…'}</option><option value="RECEIPT"${x.projectId==='RECEIPT'?' selected':''}>Receipt or invoice → Receipts tab</option>${opts.replace(`value="${x.projectId}"`,`value="${x.projectId}" selected`)}</select>
+        <div class="bline"><select data-bi="${i}" data-f="stage"${x.projectId==='RECEIPT'?' hidden':''}>${['before','during','after'].map(s=>`<option value="${s}"${x.stage===s?' selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}</select>
+        <span class="hint">${esc(x.note||'')}</span></div>
+      </div>
+      <button class="btn ghost" data-bx="${i}" aria-label="Skip this photo">×</button></div>`).join('')}</div>
+    ${bulk.some(x=>x.key&&!x.projectId&&x.state==='ready')?'<div class="rrow"><button class="btn" id="bulkRe">Sort the unassigned ones with AI again</button></div>':''}
+    <div class="rrow"><button class="btn" id="clearAll">Clear all unassigned</button></div>
+    <div class="rrow"><button class="btn primary" id="bulkSave" ${pending||!bulk.some(x=>x.projectId&&x.key)?'disabled':''}>Save ${bulk.filter(x=>x.projectId&&x.key).length} photos${nRec?` (${nRec} receipt${nRec>1?'s':''})`:''}</button><span class="hint" id="bulkMsg"></span></div></div>`:''}`;
+  const dz=$('#bigDrop');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');bulkAdd([...e.dataTransfer.files])});
+  $('#dedupe').onclick=async()=>{const b=$('#dedupe');b.disabled=true;$('#dedupeMsg').textContent='Comparing every photo…';S.busy++;
+    try{knownHashes=null;await loadKnown();let removed=0;
+      for(const p of S.project){const mine=knownHashes.filter(k=>k.pid===p.id);const drop=new Set();
+        for(let i=0;i<mine.length;i++)for(let j=i+1;j<mine.length;j++){const a=mine[i],c=mine[j];if(drop.has(a.key)||drop.has(c.key))continue;
+          if(ham(a.h,c.h)<=6)drop.add(a.px>=c.px?c.key:a.key)}
+        if(drop.size){const keep=(p.photos||[]).filter(ph=>!drop.has(ph.key));const j=await save('project',p.id,{photos:keep,...(drop.has(p.cover)?{cover:''}:{})});Object.assign(p,j.record);removed+=drop.size}}
+      knownHashes=null;render();$('#dedupeMsg').textContent=removed?`Removed ${removed} lower-resolution duplicate${removed>1?'s':''}; the sharper copy was kept.`:'No duplicates found.'}
+    catch(e){$('#dedupeMsg').textContent=e.message}finally{S.busy--;b.disabled=false}};
+  $('#upOnly').onchange=e=>{S.upOnly=e.target.checked};
+  const ca=$('#clearAll');if(ca)ca.onclick=()=>{const ks=bulk.filter(x=>x.key&&!x.projectId).map(x=>x.key);if(ks.length)save('dismiss',null,{keys:ks}).catch(()=>{});bulk=bulk.filter(x=>x.projectId);drawBulk();toast('Cleared unassigned photos')};
+  $('#bulkPick').onclick=()=>{$('#bulkFiles').value='';$('#bulkFiles').click()};
+  $('#dBody').querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>{const x=bulk[+b.dataset.zoom];$('#lbImg').src=x.key?photoUrl(x.key):x.preview;$('#lb').hidden=false});
+  $('#dBody').querySelectorAll('[data-bi]').forEach(el=>el.onchange=()=>{bulk[+el.dataset.bi][el.dataset.f]=el.value;drawBulk()});
+  $('#dBody').querySelectorAll('[data-bx]').forEach(b=>b.onclick=()=>{const x=bulk[+b.dataset.bx];if(x.key)save('dismiss',null,{keys:[x.key]}).catch(()=>{});bulk.splice(+b.dataset.bx,1);drawBulk()});
+  const sv=$('#bulkSave');if(sv)sv.onclick=bulkSave;
+  const re=$('#bulkRe');if(re)re.onclick=async()=>{re.disabled=true;const todo=bulk.filter(x=>x.key&&!x.projectId);todo.forEach(x=>{x.state='sorting';x.note=''});drawBulk();S.busy++;
+    const projects=sorted().map(p=>({id:p.id,num:p.num,location:p.location,title:tTitle(p),status:stOf(p)}));let i=0;
+    const w=async()=>{while(i<todo.length){const x=todo[i++];try{const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'photo',key:x.key,projects}});
+      if(f.projectId==='RECEIPT'||(f.projectId&&S.project.some(p=>p.id===f.projectId)))x.projectId=f.projectId;if(['before','during','after'].includes(f.stage))x.stage=f.stage;x.note=f.reason||'Pick the project'}catch(e){x.note='Pick the project'}x.state='ready';if(S.open?.type==='bulk')drawBulk()}};
+    await Promise.all([w(),w(),w()]);S.busy--};
+}
+$('#bulkFiles').onchange=e=>bulkAdd([...e.target.files]);
+async function bulkAdd(files){
+  files=files.filter(f=>f.type.startsWith('image/'));if(!files.length)return;
+  let items=files.map(f=>({file:f,state:'checking',stage:'before',projectId:'',note:'Checking for duplicates…',preview:URL.createObjectURL(f)}));
+  bulk.push(...items);drawBulk();S.busy++;
+  await loadKnown();let skipped=0;
+  let upgraded=0;
+  for(const x of items){try{x.h=await dhashFromSrc(x.preview);x.px=lastDims}catch{}
+    const dup=x.h&&(findDup(x.h)||(()=>{for(const y of bulk)if(y!==x&&y.h&&!y.dup&&ham(y.h,x.h)<=6)return{where:'this batch'};return null})());
+    if(!dup){if(S.upOnly){x.dup=true;x.ignored=true;continue}x.state='queued';continue}
+    x.dup=true;
+    if(dup.key&&x.px>dup.px*1.3){ // sharper copy of a photo already on the site: swap it in
+      try{const u=await uploadOne(x.file);
+        if(dup.pid){const p=S.project.find(q=>q.id===dup.pid);const photos=(p.photos||[]).map(ph=>ph.key===dup.key?{...ph,key:u.key}:ph);
+          const j=await save('project',p.id,{photos,...(p.cover===dup.key?{cover:u.key}:{})});Object.assign(p,j.record)}
+        else{const r=S.receipt.find(r=>r.file?.key===dup.key);if(r){const j=await save('receipt',r.id,{file:{...r.file,key:u.key}});upsert('receipt',j.record)}else{x.dup=false;x.key=u.key;x.state='ready';x.note='Sharper copy of an unsorted photo';save('dismiss',null,{keys:[dup.key]}).catch(()=>{});continue}}
+        Object.assign(dup,{key:u.key,px:x.px});upgraded++}catch(e){skipped++}}
+    else skipped++}
+  const ign=items.filter(x=>x.ignored).length;
+  bulk=bulk.filter(x=>!x.dup);items=items.filter(x=>!x.dup&&x.state==='queued');
+  if(skipped||upgraded||ign)toast([upgraded?`${upgraded} existing photo${upgraded>1?'s':''} replaced with the higher-resolution version`:'',skipped?`${skipped} duplicate${skipped>1?'s':''} skipped`:'',ign?`${ign} new photo${ign>1?'s':''} ignored`:''].filter(Boolean).join(' · '));
+  render();
+  drawBulk();if(!items.length){S.busy--;return}
+  const projects=sorted().map(p=>({id:p.id,num:p.num,location:p.location,title:p.title,status:stOf(p)}));
+  let idx=0;
+  const worker=async()=>{while(idx<items.length){const x=items[idx++];
+    try{x.state='uploading';const u=await uploadOne(x.file);x.key=u.key;if(x.h&&knownHashes)knownHashes.push({h:x.h,where:'this upload'});
+      x.state='sorting';const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'photo',key:u.key,projects}});
+      if(f.projectId==='RECEIPT'||(f.projectId&&S.project.some(p=>p.id===f.projectId)))x.projectId=f.projectId;
+      if(['before','during','after'].includes(f.stage))x.stage=f.stage;
+      x.note=f.reason||'';x.state='ready'}
+    catch(e){x.state=x.key?'ready':'error';x.note=x.key?'AI could not place this one. Pick the project.':e.message}
+    if(S.open?.type==='bulk')drawBulk()}};
+  await Promise.all([worker(),worker(),worker()]);S.busy--;
+}
+async function bulkSave(){
+  const recs=bulk.filter(x=>x.projectId==='RECEIPT'&&x.key);
+  const by={};for(const x of bulk)if(x.projectId&&x.projectId!=='RECEIPT'&&x.key)(by[x.projectId]=by[x.projectId]||[]).push({key:x.key,stage:x.stage,caption:''});
+  $('#bulkSave').disabled=true;S.busy++;
+  try{for(const[pid,add]of Object.entries(by)){const p=S.project.find(q=>q.id===pid);const j=await save('project',pid,{photos:[...(p.photos||[]),...add]});Object.assign(p,j.record)}
+    const projects=sorted().map(p=>({id:p.id,num:p.num,location:p.location,title:tTitle(p)}));
+    for(let i=0;i<recs.length;i++){const x=recs[i];$('#bulkMsg').textContent=`Reading receipt ${i+1} of ${recs.length}…`;
+      let d={kind:'receipt',vendor:'',date:'',total:0,hours:null,rate:null,lines:[],allocations:[],notes:'Added from photo upload'};
+      try{const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'receipt',key:x.key,projects}});
+        d={...d,kind:f.kind==='labor'?'labor':'receipt',vendor:f.vendor||'',date:f.date||'',total:+f.total||0,hours:f.hours??null,rate:f.rate??null,lines:f.lines||[],
+          allocations:(f.allocations||[]).filter(a=>S.project.some(p=>p.id===a.projectId)).map(a=>({projectId:a.projectId,amount:a.amount??null,hours:a.hours??null}))}}catch(e){}
+      const j=await save('receipt',null,{...d,file:{key:x.key,type:'image/jpeg',name:''}});upsert('receipt',j.record)}
+    const n=Object.values(by).flat().length;bulk=bulk.filter(x=>!(x.projectId&&x.key));render();
+    toast(`${n} photos added to ${Object.keys(by).length} projects${recs.length?`, ${recs.length} receipt${recs.length>1?'s':''} added to Receipts & invoices`:''}`);
+    if(bulk.length)drawBulk();else closeDrawer()}
+  catch(e){toast(e.message);$('#bulkSave').disabled=false}finally{S.busy--}
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  $('#viewProjects').hidden=S.tab!=='projects';$('#viewReceipts').hidden=S.tab!=='receipts';$('#viewShow').hidden=S.tab!=='show'});
+
+/* ---------- drawer ---------- */
+function openDrawer(){$('#scrim').hidden=false;$('#drawer').hidden=false;document.body.style.overflow='hidden'}
+function closeDrawer(){$('#drawer').classList.remove('wide');S.open=null;$('#scrim').hidden=true;$('#drawer').hidden=true;document.body.style.overflow=''}
+$('#dClose').onclick=closeDrawer;$('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#lb').hidden)$('#lb').hidden=true;else if(S.open)closeDrawer()}});
+function openProject(id){S.open={type:'project',id};openDrawer();renderDrawer();$('#dBody').scrollTop=0}
+$('#bellBtn').onclick=()=>{S.open={type:'comments'};openDrawer();renderDrawer()};
+$('#newBtn').onclick=$('#fab').onclick=()=>{newPh=[];S.open={type:'new'};openDrawer();renderDrawer()};
+function renderDrawer(){
+  const o=S.open;if(!o)return;
+  if(o.type==='project')return drawProject(S.project.find(p=>p.id===o.id));
+  if(o.type==='new')return drawNew();
+  if(o.type==='receipt')return drawReceipt();
+  if(o.type==='bulk')return drawBulk();
+  if(o.type==='comments')return drawComments();
+}
+
+function field(p,key,label,kind='text',opts){
+  const v=p[key]??'';
+  if(!isEd()){const shown=kind==='select'?(opts.find(x=>String(x[0])===String(v))?.[1]||'—'):(v||'—');
+    return`<label class="f${kind==='textarea'?' wide':''}">${label}<div class="ro">${esc(shown)}</div></label>`}
+  const id=`f_${key}`;
+  if(kind==='select')return`<label class="f">${label}<select id="${id}" data-k="${key}">${opts.map(([a,b])=>`<option value="${a}"${String(a)===String(v)?' selected':''}>${b}</option>`).join('')}</select></label>`;
+  if(kind==='textarea')return`<label class="f wide">${label}<textarea id="${id}" data-k="${key}">${esc(v)}</textarea></label>`;
+  return`<label class="f">${label}<input id="${id}" data-k="${key}" value="${esc(v)}"${kind==='num'?' inputmode="decimal"':''}></label>`;
+}
+
+function drawProject(p){
+  if(!p){closeDrawer();return}
+  const pos=sorted().indexOf(p)+1,r=reviewOf(p.id),e=estimate(p),a=actuals(p.id);
+  $('#dTitle').textContent=`#${p.num} ${p.location}`;
+  const cms=S.comment.filter(c=>c.projectId===p.id).sort((x,y)=>x.at.localeCompare(y.at));
+  const st={before:[],during:[],after:[]};(p.photos||[]).forEach((x,i)=>(st[x.stage]||st.before).push({...x,i}));
+  const cB=beforeOf(p),cA=lastOf(p,'after'),cmp=cB&&cA;
+  const reviewBlock=`  <div class="card review ${r?.decision||''}">
+    <h3>Owner's approval</h3>
+    <div class="rstate">${r?(r.decision==='approved'?'Approved':'Not approved')+` <span class="hint">by ${esc(r.by)}, ${new Date(r.at).toLocaleDateString()}</span>`:'Awaiting review'}</div>
+    <label class="f">Comment <span style="font-weight:400">(required if not approving)</span><textarea id="revNote" placeholder="Questions, conditions, or why not"></textarea></label>
+    <div class="rrow">
+      <button class="btn good ${r?.decision==='approved'?'':'off'}" id="apBtn">${r?.decision==='approved'?'✓ Approved':'Approve'}</button>
+      <button class="btn bad ${r?.decision==='declined'?'on':''}" id="noBtn">Not approved</button>
+      ${r?'<button class="btn ghost" id="clrBtn">Clear decision</button>':''}
+    </div>
+  </div>
+
+`;
+  $('#dBody').innerHTML=`
+${isEd()||!apOn()?'':`${reviewBlock}`}  <div class="card"><h3>Project</h3><div class="grid2">
+    ${field(p,'short','Title (short)')}
+    ${field(p,'why','Why it matters')}
+    ${field(p,'title','Notes','textarea')}
+    ${field(p,'location','Where')}
+    ${field(p,'section','Area','select',[['Interior','Interior'],['Exterior','Exterior']])}
+    ${field(p,'priority','Priority','select',[[1,'P1 Urgent'],[2,'P2 Before rain'],[3,'P3 Later']])}
+    ${field(p,'status','Status','select',Object.entries(STATUS))}
+    ${field(p,'num','Reference #','num')}
+  </div>${isEd()?`<label class="privrow"><input type="checkbox" id="askBox"${awaitingOf(p)||p.askApproval===true?' checked':''}> <span><b>Ask the manager to approve</b>: shows on their review page under Needs your approval. Leave off for work already underway.</span></label><label class="privrow"><input type="checkbox" id="privBox"${p.private?' checked':''}> <span><b>Private</b>: personal project, not billed to the landlord. Hidden from the manager and left out of their totals.</span></label>`:''}</div>
+
+  <div class="card"><h3>Estimate</h3><div class="grid2">
+    ${field(p,'hours','Labor hours','text')}
+    ${field(p,'materials','Materials / parts')}
+    <label class="f">Labor cost<div class="ro num">${e.lab?fmtR(e.lab):'Add hours'}</div></label>
+    <label class="f">Estimated total<div class="ro num">${e.tot?fmtR(e.tot):'Pending'}</div></label>
+    ${field(p,'notes','Notes','textarea')}
+  </div>${!p.labor&&e.h&&!rate()?`<p class="hint" style="margin:8px 0 0">Set the laborer's hourly rate on the Receipts tab to calculate labor cost from hours.</p>`:''}
+  ${!p.labor&&e.h&&rate()?`<p class="hint" style="margin:8px 0 0">Labor calculated at ${money(rate())}/hr.</p>`:''}</div>
+
+  <div class="card"><h3>Photos</h3>
+    ${cmp?`<div class="compare" id="cmp"><img src="${photoUrl(cB.key)}" alt="Before"><img class="after" src="${photoUrl(cA.key)}" alt="After"><div class="bar"></div><span class="lab" style="left:8px">Before</span><span class="lab" style="right:8px">After</span><input type="range" min="0" max="100" value="50" aria-label="Compare before and after"></div><div style="height:12px"></div>`:''}
+    <div class="stages">${['before','during','after'].map(s=>`<div class="stage"><h4>${s[0].toUpperCase()+s.slice(1)} <span>${st[s].length}</span></h4>
+      <div class="drop" data-stage="${s}">${st[s].map(x=>`<div class="ph"><button class="open" data-view="${x.key}" aria-label="View photo"><img loading="lazy" src="${photoUrl(x.key)}" alt=""></button>${isEd()?`<button class="x" data-rm="${x.i}" aria-label="Remove photo">×</button><button class="rot" data-rot="${x.key}" aria-label="Rotate" title="Rotate">↻</button><button class="star${coverOf(p)?.key===x.key?' on':''}" data-cover="${x.key}" aria-label="Use as main photo" title="Use as main photo">★</button>`:''}</div>`).join('')}
+      ${isEd()?`<button class="addph" data-add="${s}">+ Add<br>or drop</button>`:(st[s].length?'':'<span class="hint">None yet</span>')}</div></div>`).join('')}</div>
+    ${isEd()?'<p class="hint" style="margin:8px 0 0">Drag photos from your computer onto a box, or tap + Add to use your phone camera. Tap ★ on a photo to make it the main photo on the tile. The × removes a photo, for example a low-resolution duplicate.</p>':''}
+  </div>
+
+${isEd()&&apOn()?`${reviewBlock}`:''}
+  <div class="card"><h3>Actual costs</h3>
+    ${a.rows.length?`<div class="scroll"><table class="costs"><tr><th>Receipt / invoice</th><th>Date</th><th>For</th><th class="n">Amount</th></tr>
+      ${a.rows.map(x=>`<tr><td>${esc(x.r.vendor||'Untitled')}</td><td>${esc(x.r.date||'')}</td><td>${esc(x.txt)}</td><td class="n">${money(x.amt)}</td></tr>`).join('')}
+      <tr><td colspan="3"><b>Total spent</b> <span class="hint">vs. estimate ${e.tot?fmtR(e.tot):'pending'}</span></td><td class="n"><b>${money(a.total)}</b></td></tr></table></div>`:'<p class="hint" style="margin:0">No receipts or invoice hours assigned to this project yet.</p>'}
+  </div>
+
+  <div class="card"><h3>Comments</h3><div class="comments">
+    ${cms.map(c=>`<div class="cm ${c.role}"><div class="h"><b>${esc(c.by)}</b> · ${c.role==='reviewer'?'Reviewer':'Editor'} · ${new Date(c.at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${c.tag?` · ${c.tag==='declined'?'Not approved':c.tag==='approved'?'Approved':''}`:''}</div><p>${esc(c.text)}</p></div>`).join('')||'<p class="hint" style="margin:0">No comments yet.</p>'}
+    <label class="f">Add a comment<textarea id="cmText" placeholder="Type, or tap the microphone on your keyboard to speak"></textarea></label>
+    <div><button class="btn" id="cmPost">Post comment</button></div>
+  </div></div>
+
+  ${isEd()?`<div class="card"><h3>Remove</h3><div class="danger"><button class="btn bad" id="delBtn">Delete this project</button><span class="hint" id="delHint"></span></div></div>`:''}
+  ${p.source?`<p class="hint" style="margin:0">Source: ${esc(p.source)}</p>`:''}`;
+
+  const ab=$('#askBox');if(ab)ab.onchange=async()=>{p.askApproval=ab.checked;render();try{await save('project',p.id,{askApproval:ab.checked});toast(ab.checked?'Approval requested':'Approval request removed')}catch(e){toast(e.message)}};
+  const pb=$('#privBox');if(pb)pb.onchange=async()=>{p.private=pb.checked;render();try{const j=await save('project',p.id,{private:pb.checked});Object.assign(p,j.record);toast(pb.checked?'Hidden from the manager':'Visible to the manager')}catch(e){toast(e.message)}};
+  // field edits
+  $('#dBody').querySelectorAll('[data-k]').forEach(el=>{el.addEventListener('change',async()=>{
+    let v=el.value;const k=el.dataset.k;if(k==='priority'||k==='num')v=Number(v)||v;
+    p[k]=v;renderTiles();renderSummary();
+    try{const j=await save('project',p.id,{[k]:v});Object.assign(p,j.record);toast('Saved')}catch(e){toast(e.message)}})});
+  // review
+  const decide=async d=>{const note=$('#revNote').value.trim();
+    if(d==='declined'&&!note){$('#revNote').focus();toast('Add a comment explaining why');return}
+    try{S.busy++;const j=await save('review',p.id,{decision:d});upsert('review',j.record);
+      if(note){const c=await save('comment',null,{projectId:p.id,text:note,tag:d});S.comment.push(c.record)}
+      toast(d==='approved'?'Approved':d?'Marked not approved':'Decision cleared');render()}catch(e){toast(e.message)}finally{S.busy--}};
+  if($('#apBtn'))$('#apBtn').onclick=()=>decide('approved');if($('#noBtn'))$('#noBtn').onclick=()=>decide('declined');
+  const cl=$('#clrBtn');if(cl)cl.onclick=()=>decide(null);
+  $('#cmPost').onclick=async()=>{const t=$('#cmText').value.trim(),b=$('#cmPost');if(!t){$('#cmText').focus();toast('Type a comment first');return}
+    if(S.preview){S.comment.push({id:'pv'+Date.now(),projectId:p.id,text:t,by:S.me.name,role:'reviewer',at:new Date().toISOString(),preview:true});drawProject(p);
+      toast('Preview only: this is how the comment will look. It was not saved.');return}
+    b.disabled=true;b.textContent='Posting…';
+    try{const c=await save('comment',null,{projectId:p.id,text:t});S.comment.push(c.record);drawProject(p);renderTiles();toast('Comment posted');
+      setTimeout(()=>{const l=[...document.querySelectorAll('#dBody .cm')].pop();if(l){l.scrollIntoView({block:'center'});l.classList.add('fresh')}},50)}
+    catch(e){toast('Comment not posted: '+e.message);b.disabled=false;b.textContent='Post comment'}};
+  // compare
+  const c=$('#cmp');if(c){const inp=c.querySelector('input');inp.oninput=()=>{c.querySelector('.after').style.clipPath=`inset(0 0 0 ${inp.value}%)`;c.querySelector('.bar').style.left=inp.value+'%'}}
+  // photos
+  $('#dBody').querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{openLB(photoUrl(b.dataset.view))});
+  if(isEd()){
+    $('#dBody').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{pickStage=b.dataset.add;pickFor=p.id;$('#filePick').value='';$('#filePick').click()});
+    $('#dBody').querySelectorAll('[data-rot]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const nk=await rotateKey(b.dataset.rot);
+      const photos=(p.photos||[]).map(ph=>ph.key===b.dataset.rot?{...ph,key:nk}:ph);const j=await save('project',p.id,{photos,...(p.cover===b.dataset.rot?{cover:nk}:{})});Object.assign(p,j.record);render()}catch(e){toast(e.message)}});
+    $('#dBody').querySelectorAll('[data-cover]').forEach(b=>b.onclick=async()=>{try{const j=await save('project',p.id,{cover:b.dataset.cover});Object.assign(p,j.record);render();toast('Main photo set')}catch(e){toast(e.message)}});
+    $('#dBody').querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.rm;const photos=(p.photos||[]).filter((_,j)=>j!==i);
+      try{const j=await save('project',p.id,{photos});Object.assign(p,j.record);render()}catch(e){toast(e.message)}});
+    $('#dBody').querySelectorAll('.drop').forEach(z=>{
+      z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over')});
+      z.addEventListener('dragleave',()=>z.classList.remove('over'));
+      z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');addPhotos(p.id,z.dataset.stage,[...e.dataTransfer.files])});
+    });
+    const del=$('#delBtn');del.onclick=async()=>{if(!del.dataset.arm){del.dataset.arm=1;del.textContent='Tap again to delete';$('#delHint').textContent='This removes the project, its photos and its approval.';return}
+      try{await save('project',p.id,null,{delete:true});S.project=S.project.filter(x=>x.id!==p.id);closeDrawer();render();toast('Project deleted')}catch(e){toast(e.message)}};
+  }
+}
+function upsert(kind,rec){const a=S[kind],i=a.findIndex(x=>x.id===rec.id);if(i>=0)a[i]=rec;else a.push(rec)}
+function openLB(src){const i=$('#lbImg');i.classList.remove('zoomed');i.src=src;$('#lb').hidden=false;$('#lb').scrollTo(0,0)}
+$('#lbImg').onclick=e=>{e.stopPropagation();$('#lbImg').classList.toggle('zoomed')};
+$('#lbClose').onclick=()=>$('#lb').hidden=true;$('#lb').onclick=e=>{if(e.target.id==='lb')$('#lb').hidden=true};
+
+/* ---------- rotate a stored photo 90° clockwise ---------- */
+async function rotateKey(key){
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=photoUrl(key)});
+  const c=document.createElement('canvas');c.width=img.naturalHeight;c.height=img.naturalWidth;const x=c.getContext('2d');
+  x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(img,0,0);
+  const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));const fd=new FormData();fd.append('file',new File([b],'rotated.jpg',{type:'image/jpeg'}));
+  const u=await api('/api/upload',{method:'POST',body:fd});return u.key}
+/* ---------- photo upload ---------- */
+let pickStage='before',pickFor=null;
+$('#filePick').onchange=e=>addPhotos(pickFor,pickStage,[...e.target.files]);
+async function shrink(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type))return file;
+  try{const bmp=await createImageBitmap(file,{imageOrientation:'from-image'});const max=2000,s=Math.min(1,max/Math.max(bmp.width,bmp.height));
+    
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));return new File([b],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'})}catch{return file}
+}
+async function uploadOne(file){const fd=new FormData();fd.append('file',await shrink(file));return api('/api/upload',{method:'POST',body:fd})}
+async function addPhotos(pid,stage,files){
+  files=files.filter(f=>f.type.startsWith('image/'));if(!files.length)return;
+  S.busy++;const added=[];
+  try{for(let i=0;i<files.length;i++){toast(`Uploading photo ${i+1} of ${files.length}…`);const u=await uploadOne(files[i]);added.push({key:u.key,stage,caption:''})}
+    const p=S.project.find(x=>x.id===pid);const j=await save('project',pid,{photos:[...(p.photos||[]),...added]});Object.assign(p,j.record);toast(`${added.length} photo${added.length>1?'s':''} added`);render()}
+  catch(e){toast(e.message)}finally{S.busy--}
+}
+
+/* ---------- new project ---------- */
+let newPh=[];
+function drawNew(){
+  $('#dTitle').textContent='New project';
+  const locs=[...new Set(S.project.map(p=>p.location))];
+  $('#dBody').innerHTML=`
+  <div class="card ai"><h3>1 · Photos</h3>
+    <div class="newph" id="newPh">${newPh.map((x,i)=>`<div class="ph"><img src="${x.preview}" alt="" data-nzoom="${i}" style="cursor:zoom-in">${x.key?'':'<span class="upl">…</span>'}<button class="x" data-nrm="${i}" aria-label="Remove">×</button></div>`).join('')}
+      <button class="addph big" id="nPick">＋ Take or choose photos</button></div>
+    <h3 style="margin-top:14px">2 · Say what's wrong <span style="text-transform:none;letter-spacing:0;font-weight:500">(optional)</span></h3>
+    <textarea class="big" id="aiText" placeholder="Tap the mic on your keyboard and talk, e.g. 'Back deck stairs by the vineyard, two rotten treads, about 3 hours and 60 dollars of lumber.'"></textarea>
+    <div class="rrow"><button class="btn primary" id="aiGo">3 · Fill in with AI</button><span class="hint" id="aiMsg">AI looks at the photos and your words.</span></div>
+  </div>
+  <div class="card"><h3>Project</h3><div class="grid2">
+    <label class="f wide">Title<input id="n_short" placeholder="e.g. Rotten deck stairs"></label>
+    <label class="f wide">What needs doing<textarea id="n_title"></textarea></label>
+    <label class="f">Where<input id="n_location" list="locs"><datalist id="locs">${locs.map(l=>`<option value="${esc(l)}">`).join('')}</datalist></label>
+    <label class="f">Area<select id="n_section"><option>Interior</option><option>Exterior</option></select></label>
+    <label class="f">Priority<select id="n_priority"><option value="1">P1 Urgent</option><option value="2" selected>P2 Before rain</option><option value="3">P3 Later</option></select></label>
+    <label class="f">Status<select id="n_status"><option value="queue">In queue</option><option value="in_progress">In progress</option><option value="done">Done</option></select></label>
+    <label class="f">Labor hours<input id="n_hours" placeholder="2-3" inputmode="decimal"></label>
+    <label class="f">Parts $<input id="n_materials" placeholder="$50-60"></label>
+    <label class="f wide">Notes<textarea id="n_notes"></textarea></label>
+  </div>
+  <label class="privrow"><input type="checkbox" id="n_ask" checked> <span><b>Ask the manager to approve</b></span></label>
+  <label class="privrow"><input type="checkbox" id="n_private"> <span><b>Private</b>: not billed to the landlord</span></label>
+  <div class="rrow"><button class="btn primary" id="nSave">Save project</button></div></div>`;
+  $('#nPick').onclick=()=>{$('#newFiles').value='';$('#newFiles').click()};
+  $('#dBody').querySelectorAll('[data-nzoom]').forEach(im=>im.onclick=()=>{$('#lbImg').src=im.src;$('#lb').hidden=false});
+  $('#dBody').querySelectorAll('[data-nrm]').forEach(b=>b.onclick=()=>{newPh.splice(+b.dataset.nrm,1);drawNew()});
+  const fill=async()=>{const t=$('#aiText').value.trim(),keys=newPh.filter(x=>x.key).map(x=>x.key);
+    if(!t&&!keys.length){toast('Add a photo or say what’s wrong first');return}
+    $('#aiGo').disabled=true;$('#aiMsg').textContent='Looking at it…';
+    try{const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'project',text:t,keys,locations:locs}});
+      for(const k of['short','title','location','hours','materials','notes'])if(f[k]!=null&&$('#n_'+k))$('#n_'+k).value=f[k];
+      if(f.section)$('#n_section').value=f.section;if(f.priority)$('#n_priority').value=String(f.priority);
+      newWhy=f.why||'';newWater=f.water;
+      $('#aiMsg').textContent='Filled in. Check it, then save.'}catch(e){$('#aiMsg').textContent=e.message}finally{$('#aiGo').disabled=false}};
+  $('#aiGo').onclick=fill;
+  $('#nSave').onclick=async()=>{const title=$('#n_title').value.trim()||$('#n_short').value.trim();if(!title){$('#n_title').focus();return toast('Describe what needs doing, or tap Fill in with AI')}
+    if(newPh.some(x=>!x.key))return toast('Photos are still uploading');
+    const maxO=Math.max(0,...S.project.map(p=>p.order||0)),maxN=Math.max(0,...S.project.map(p=>+p.num||0));
+    const data={short:$('#n_short').value.trim(),why:newWhy,title,location:$('#n_location').value.trim(),section:$('#n_section').value,priority:+$('#n_priority').value,hours:$('#n_hours').value.trim(),
+      materials:$('#n_materials').value.trim(),notes:$('#n_notes').value.trim(),status:$('#n_status').value,askApproval:$('#n_ask').checked,private:$('#n_private').checked,
+      order:maxO+1,num:maxN+1,photos:newPh.map(x=>({key:x.key,stage:$('#n_status').value==='done'?'after':'before',caption:''}))};
+    if(newWater!=null)data.water=!!newWater;
+    try{$('#nSave').disabled=true;const j=await save('project',null,data);S.project.push(j.record);newPh=[];newWhy='';newWater=null;render();closeDrawer();toast(`Saved as #${j.record.num}`)}catch(e){toast(e.message);$('#nSave').disabled=false}};
+}
+let newWhy='',newWater=null;
+$('#newFiles').onchange=async e=>{const files=[...e.target.files].filter(f=>f.type.startsWith('image/'));if(!files.length)return;
+  const items=files.map(f=>({file:f,preview:URL.createObjectURL(f),key:null}));newPh.push(...items);drawNew();S.busy++;
+  for(const x of items){try{const u=await uploadOne(x.file);x.key=u.key}catch(err){toast(err.message);newPh.splice(newPh.indexOf(x),1)}if(S.open?.type==='new')drawNew()}
+  S.busy--;
+  if(S.open?.type==='new'&&!$('#n_title').value&&newPh.some(x=>x.key))$('#aiGo').click()};
+
+/* ---------- receipts ---------- */
+function renderReceipts(){
+  let mat=0,lab=0,cost=0,hrs=0,unM=0,unH=0;
+  for(const r of S.receipt){const c=receiptCheck(r);if(r.kind==='labor'){hrs+=(r.wlines||[]).length?wsum(r).bh:(+r.hours||0);lab+=billed(r);cost+=+r.total||0;unH+=Math.max(0,c.left)}else{mat+=+r.total||0;unM+=Math.max(0,c.left)}}
+  $('#rSummary').innerHTML=stat('Parts receipts',`<span class="num">${money(mat)}</span>`)+stat('Labor billed',`<span class="num">${money(lab)}</span> <small>${hrs} hrs × $40</small>`)+
+    (isEd()&&lab?stat('Handyman cost · margin',`<span class="num">${money(cost)}</span> <small>margin ${money(lab-cost)}</small>`):'')+
+    stat('Total billed',`<span class="num">${money(mat+lab)}</span>`)+stat('Not yet assigned',`<span class="num">${money(unM)}</span> <small>+ ${Math.round(unH*100)/100} hrs</small>`);
+  const list=[...S.receipt].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  $('#rlist').innerHTML=list.length?list.map(r=>{const c=receiptCheck(r);const full=Math.abs(c.left)<.01&&c.tot>0;
+    const th=r.file?(r.file.type==='application/pdf'?'PDF':`<img loading="lazy" src="${photoUrl(r.file.key)}" alt="" data-lbthumb="${photoUrl(r.file.key)}">`):'No file';
+    return`<div class="rwrap"><button class="rdel" data-rdel="${r.id}" aria-label="Delete" title="Delete"${isEd()?'':' hidden'}>×</button><button class="rrowi" data-r="${r.id}"><div class="thumb">${th}</div><div style="min-width:0"><div class="tmeta">${r.kind==='labor'?'Labor invoice':'Receipt'} · ${esc(r.date||'no date')} · ${(r.allocations||[]).length} project${(r.allocations||[]).length===1?'':'s'}</div>
+      <div class="ttitle">${esc(r.vendor||'Untitled')}</div>
+      <div class="chips">${full?'<span class="chip approved">Fully assigned</span>':c.left<0?`<span class="chip declined">Over by ${c.unit==='$'?money(-c.left):-c.left+' hrs'}</span>`:`<span class="chip pending">${c.unit==='$'?money(c.left):c.left+' hrs'} unassigned</span>`}</div></div>
+      <div class="tnums"><b>${money(billed(r))}</b>${r.kind==='labor'?((r.wlines||[]).length?wsum(r).bh:(r.hours||0))+' hrs billed at $40'+(isEd()?` · handyman ${r.hours||0} hrs, ${money(+r.total||0)}`:''):''}</div></button></div>`}).join('')
+   :`<div class="empty"><h3>No receipts or invoices yet</h3><p>Upload a photo or PDF of each one once. Then split it across the projects it paid for: dollars for store receipts, hours for laborer invoices.</p></div>`;
+}
+$('#rlist').addEventListener('click',async e=>{const lt=e.target.closest('[data-lbthumb]');if(lt){openLB(lt.dataset.lbthumb);return}const d=e.target.closest('[data-rdel]');
+  if(d){const r=S.receipt.find(x=>x.id===d.dataset.rdel);if(!confirm(`Delete "${r.vendor||'this receipt'}" (${money(+r.total||0)})? The uploaded file is removed too.`))return;
+    try{await save('receipt',r.id,null,{delete:true});S.receipt=S.receipt.filter(x=>x.id!==r.id);render();toast('Receipt deleted')}catch(err){toast(err.message)}return}
+  const b=e.target.closest('[data-r]');if(b)openReceipt(b.dataset.r)});
+($('#rate')||{addEventListener(){}}).addEventListener('change',async e=>{const v=parseFloat(e.target.value)||0;try{const j=await save('settings',null,{rate:v});S.settings=j.record;render();toast('Hourly rate saved')}catch(err){toast(err.message)}});
+let draft=null;
+function openReceipt(id){const r=S.receipt.find(x=>x.id===id);draft=JSON.parse(JSON.stringify(r));S.open={type:'receipt'};openDrawer();renderDrawer()}
+$('#newReceipt').onclick=()=>{draft={kind:'receipt',vendor:'',date:new Date().toISOString().slice(0,10),total:'',hours:'',rate:'',allocations:[],lines:[],notes:''};S.open={type:'receipt'};openDrawer();renderDrawer()};
+function workDaysHTML(d,ed,opts){
+  const w=d.wlines||[],sum=wsum(d),rt=+d.rate||0;
+  if(!ed){return`<div class="card"><h3>Invoice to landlord</h3><div class="scroll"><table class="costs"><tr><th>Date</th><th>Work</th><th>Project</th><th class="n">Hours</th><th class="n">Rate</th><th class="n">Amount</th></tr>
+    ${w.map(l=>{const p=S.project.find(x=>x.id===l.projectId);return`<tr><td class="num">${esc(l.date)}</td><td>${esc(l.note||l.desc||'')}</td><td>${p?`#${p.num} ${esc(p.location)}`:'General'}</td><td class="n">${l.billHours}</td><td class="n">$40</td><td class="n">${money(l.billHours*RATE)}</td></tr>`}).join('')}
+    <tr><td colspan="3"><b>Total</b></td><td class="n"><b>${sum.bh}</b></td><td></td><td class="n"><b>${money(sum.bh*RATE)}</b></td></tr></table></div></div>`}
+  return`<div class="card"><h3>Work days</h3>
+    <p class="hint" style="margin:0 0 8px">The handyman's hours are your real cost. Untick <b>Bill</b> for anything the landlord shouldn't pay for, adjust the billed hours, and pick the project. The "note for landlord" is what the manager reads.</p>
+    <div class="scroll"><table class="qt wl"><thead><tr><th>Date</th><th>Handyman's description</th><th>His hrs</th><th class="c">Bill</th><th>Bill hrs</th><th>Project</th><th>Note for landlord</th><th></th></tr></thead><tbody>
+    ${w.map((l,i)=>`<tr class="${l.bill?'':'nobill'}"><td><input type="date" data-wl="${i}" data-f="date" value="${esc(l.date)}"></td>
+      <td><textarea rows="2" data-wl="${i}" data-f="desc">${esc(l.desc)}</textarea></td>
+      <td><input class="sm num" data-wl="${i}" data-f="hours" value="${esc(l.hours)}" inputmode="decimal"></td>
+      <td class="c"><input type="checkbox" data-wl="${i}" data-f="bill"${l.bill?' checked':''}></td>
+      <td><input class="sm num" data-wl="${i}" data-f="billHours" value="${esc(l.billHours)}" inputmode="decimal"${l.bill?'':' disabled'}></td>
+      <td><select data-wl="${i}" data-f="projectId"${l.bill?'':' disabled'}><option value="">General / several</option>${opts.replace(`value="${l.projectId}"`,`value="${l.projectId}" selected`)}</select></td>
+      <td><textarea rows="2" data-wl="${i}" data-f="note"${l.bill?'':' disabled'} placeholder="Leave blank to use the handyman's description">${esc(l.note||'')}</textarea></td>
+      <td><button class="btn ghost" data-rmw="${i}" aria-label="Remove day">×</button></td></tr>`).join('')}
+    </tbody></table></div>
+    <button class="btn" id="addW" style="margin-top:8px">+ Add a day</button>
+    <dl class="facts" style="margin-top:12px"><div><dt>Handyman's hours</dt><dd class="num">${sum.hrs}</dd></div><div><dt>Your cost</dt><dd class="num">${money(sum.hrs*rt)}</dd></div>
+      <div><dt>Billed to landlord</dt><dd class="num">${sum.bh} hrs · ${money(sum.bh*RATE)}</dd></div><div><dt>Margin</dt><dd class="num">${money(sum.bh*RATE-sum.hrs*rt)}</dd></div></dl>
+  </div>`;
+}
+function drawReceipt(){
+  const d=draft,ed=isEd(),lab=d.kind==='labor';$('#drawer').classList.toggle('wide',lab);
+  $('#dTitle').textContent=d.id?(d.vendor||'Receipt'):'New receipt or invoice';
+  const opts=[...S.project].sort((a,b)=>(+a.num||0)-(+b.num||0)).map(p=>`<option value="${p.id}">#${p.num} ${esc(p.location)} · ${esc(tTitle(p).slice(0,48))}</option>`).join('');
+  const c=receiptCheck(d);
+  $('#dBody').innerHTML=`
+  <div class="card"${!ed&&!d.file?' hidden':''}><h3>File</h3><div class="filebox">
+    <div class="thumb">${d.file?(d.file.type==='application/pdf'?`<a href="${photoUrl(d.file.key)}" target="_blank" rel="noopener">Open PDF</a>`:`<img src="${photoUrl(d.file.key)}" alt="Receipt" data-lbsrc="${photoUrl(d.file.key)}" style="cursor:zoom-in">`):'None'}</div>
+    <div style="display:grid;gap:8px">
+      ${d.file?`<a class="linkbtn" href="${photoUrl(d.file.key)}" target="_blank" rel="noopener">Open full file</a>`:''}
+      ${ed&&d.file&&d.file.type!=='application/pdf'?'<button class="btn" id="rfRot">↻ Rotate</button>':''}
+      ${ed?`<button class="btn" id="rfUp">${d.file?'Replace file':'Upload photo or PDF'}</button>`:''}
+      ${ed&&d.file?`<button class="btn primary" id="rfAI">Read it with AI and suggest a split</button>`:''}
+      <span class="hint" id="rfMsg"></span>
+    </div></div></div>
+  <div class="card"><h3>Details</h3><div class="grid2">
+    <label class="f">Type<select id="r_kind" ${ed?'':'disabled'}><option value="receipt"${!lab?' selected':''}>Store receipt (materials)</option><option value="labor"${lab?' selected':''}>Laborer invoice (hours)</option></select></label>
+    <label class="f">${lab?'Worker':'Store / vendor'}<input id="r_vendor" value="${esc(d.vendor)}" ${ed?'':'disabled'}></label>
+    <label class="f">Date<input id="r_date" type="date" value="${esc(d.date)}" ${ed?'':'disabled'}></label>
+    <label class="f"${lab?' hidden':''}>Total paid $<input id="r_total" inputmode="decimal" value="${esc(d.total)}" ${ed?'':'disabled'}></label>
+    ${lab?`<label class="f">Invoice #<input id="r_inv" value="${esc(d.invoiceNo||'')}" ${ed?'':'disabled'}></label>`:''}
+    ${lab?`<label class="f" hidden>Total hours<input id="r_hours" inputmode="decimal" value="${esc(d.hours)}" ${ed?'':'disabled'}></label>
+    ${ed?`<label class="f">Handyman's rate (your cost) $/hr<input id="r_rate" inputmode="decimal" value="${esc(d.rate??'')}" ${ed?'':'disabled'}></label>`:''}
+    `:''}
+    <label class="f wide privrow" style="border:0;margin:0;padding:0;display:${ed?'flex':'none'}"><input type="checkbox" id="r_private"${d.private?' checked':''} ${ed?'':'disabled'}> <span><b>Private</b>: personal purchase, hidden from the manager.</span></label>
+    <label class="f wide"${ed?'':' hidden'}>Notes<textarea id="r_notes" ${ed?'':'disabled'}>${esc(d.notes||'')}</textarea></label>
+  </div>${(d.lines||[]).length?`<div class="litems"><b>Line items</b><ul>${d.lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`:''}</div>
+  ${lab?workDaysHTML(d,ed,opts):''}
+  <div class="card"${lab?' hidden':''}><h3>Split across projects (${lab?'hours':'dollars'})</h3>
+    <div id="allocs">${(d.allocations||[]).map((a,i)=>`<div class="alloc"><select data-ai="${i}" data-f="projectId" ${ed?'':'disabled'}><option value="">Choose project…</option>${opts.replace(`value="${a.projectId}"`,`value="${a.projectId}" selected`)}</select>
+      <input data-ai="${i}" data-f="${lab?'hours':'amount'}" inputmode="decimal" placeholder="${lab?'hrs':'$'}" value="${esc(lab?a.hours??'':a.amount??'')}" ${ed?'':'disabled'}>
+      ${ed?`<button class="btn ghost" data-rmA="${i}" aria-label="Remove">×</button>`:'<span></span>'}</div>`).join('')}</div>
+    ${ed?'<button class="btn" id="addA">+ Add project</button>':''}
+    <div class="remain ${Math.abs(c.left)<.01?'ok':'off'}">${c.tot?(Math.abs(c.left)<.01?'Fully assigned':c.left>0?`${c.unit==='$'?money(c.left):c.left+' hrs'} not yet assigned (counts as general cost)`:`Assigned ${c.unit==='$'?money(-c.left):-c.left+' hrs'} more than the ${lab?'invoice hours':'receipt total'}`):(lab?'Enter total hours to check the split.':'Enter the total to check the split.')}</div>
+  </div>
+  ${ed?`<div class="rrow"><button class="btn primary" id="rSave">Save</button>${d.id?'<button class="btn bad" id="rDel">Delete</button>':''}<span class="hint" id="rDelHint"></span></div>`:''}`;
+  $('#dBody').querySelectorAll('[data-lbsrc]').forEach(im=>im.onclick=()=>openLB(im.dataset.lbsrc));
+  if(!ed)return;
+  const sync=()=>{d.kind=$('#r_kind').value;d.vendor=$('#r_vendor').value;d.date=$('#r_date').value;d.total=$('#r_total').value;d.notes=$('#r_notes').value;d.private=$('#r_private').checked;
+    if($('#r_hours'))d.hours=$('#r_hours').value;if($('#r_rate'))d.rate=$('#r_rate').value;if($('#r_inv'))d.invoiceNo=$('#r_inv').value;
+    $('#dBody').querySelectorAll('[data-wl]').forEach(el=>{const l=d.wlines[+el.dataset.wl];const f=el.dataset.f;l[f]=el.type==='checkbox'?el.checked:el.value;if(f==='bill'&&!el.checked)l.billHours=0;if(f==='bill'&&el.checked&&!+l.billHours)l.billHours=l.hours});
+    $('#dBody').querySelectorAll('[data-ai]').forEach(el=>{d.allocations[+el.dataset.ai][el.dataset.f]=el.value})};
+  $('#dBody').querySelectorAll('input,select,textarea').forEach(el=>el.addEventListener('change',()=>{const k=el.id==='r_kind';sync();
+    if(d.kind==='labor'&&d.hours&&d.rate&&(el.id==='r_hours'||el.id==='r_rate'))d.total=String(Math.round(d.hours*d.rate*100)/100);
+    if(k&&d.kind==='labor'&&!d.wlines)d.wlines=[];
+    if(k||el.dataset.ai!=null||el.dataset.wl!=null||el.id==='r_total'||el.id==='r_hours'||el.id==='r_rate')drawReceipt()}));
+  const aw=$('#addW');if(aw)aw.onclick=()=>{sync();(d.wlines=d.wlines||[]).push({date:'',desc:'',hours:'',bill:true,billHours:'',projectId:'',note:''});drawReceipt()};
+  $('#dBody').querySelectorAll('[data-rmw]').forEach(b=>b.onclick=()=>{sync();d.wlines.splice(+b.dataset.rmw,1);drawReceipt()});
+  $('#addA').onclick=()=>{sync();d.allocations.push({projectId:'',amount:'',hours:''});drawReceipt()};
+  $('#dBody').querySelectorAll('[data-rmA]').forEach(b=>b.onclick=()=>{sync();d.allocations.splice(+b.dataset.rma,1);drawReceipt()});
+  $('#dBody').querySelectorAll('[data-lbsrc]').forEach(im=>im.onclick=()=>openLB(im.dataset.lbsrc));
+  const rr=$('#rfRot');if(rr)rr.onclick=async()=>{sync();rr.disabled=true;try{const nk=await rotateKey(d.file.key);d.file={...d.file,key:nk,type:'image/jpeg'};
+    if(d.id){const j=await save('receipt',d.id,{file:d.file});upsert('receipt',j.record)}drawReceipt();render()}catch(e){toast(e.message);rr.disabled=false}};
+  $('#rfUp').onclick=()=>{sync();$('#rFilePick').value='';$('#rFilePick').click()};
+  const ai=$('#rfAI');if(ai)ai.onclick=async()=>{sync();ai.disabled=true;$('#rfMsg').textContent='Reading the file…';
+    try{const projects=sorted().map(p=>({id:p.id,num:p.num,location:p.location,title:p.title}));
+      const{fields:f}=await api('/api/ai',{method:'POST',body:{mode:'receipt',key:d.file.key,projects}});
+      if(f.kind==='labor'&&Array.isArray(f.days))d.wlines=f.days.map(x=>({date:x.date||'',desc:x.desc||'',hours:+x.hours||0,bill:true,billHours:+x.hours||0,projectId:S.project.some(p=>p.id===x.projectId)?x.projectId:'',note:''}));
+      Object.assign(d,{kind:f.kind==='labor'?'labor':'receipt',vendor:f.vendor||d.vendor,date:f.date||d.date,total:f.total??d.total,hours:f.hours??d.hours,rate:f.rate??d.rate,lines:f.lines||[],
+        allocations:(f.allocations||[]).filter(a=>S.project.some(p=>p.id===a.projectId)).map(a=>({projectId:a.projectId,amount:a.amount??'',hours:a.hours??''}))});
+      drawReceipt();$('#rfMsg').textContent='Suggested split filled in. Check it, then save.'}catch(e){$('#rfMsg').textContent=e.message;ai.disabled=false}};
+  $('#rSave').onclick=async()=>{sync();
+    if(d.kind==='labor'&&(d.wlines||[]).length){d.wlines=d.wlines.map(l=>({...l,hours:+l.hours||0,billHours:l.bill?(+l.billHours||0):0}));const w=wsum(d);d.hours=w.hrs;d.total=Math.round(w.hrs*(+d.rate||0)*100)/100;
+      const al={};for(const l of d.wlines)if(l.bill&&l.projectId)al[l.projectId]=(al[l.projectId]||0)+l.billHours;d.allocations=Object.entries(al).map(([projectId,hours])=>({projectId,hours,amount:null}))}
+    const body={...d,total:+d.total||0,hours:d.kind==='labor'?+d.hours||0:null,rate:d.kind==='labor'?+d.rate||null:null,
+      allocations:d.allocations.filter(a=>a.projectId).map(a=>({projectId:a.projectId,amount:d.kind==='labor'?null:+a.amount||0,hours:d.kind==='labor'?+a.hours||0:null}))};
+    try{const j=await save('receipt',d.id||null,body);upsert('receipt',j.record);closeDrawer();render();toast('Saved')}catch(e){toast(e.message)}};
+  const del=$('#rDel');if(del)del.onclick=async()=>{if(!del.dataset.arm){del.dataset.arm=1;del.textContent='Tap again to delete';$('#rDelHint').textContent='This also removes the uploaded file.';return}
+    try{await save('receipt',d.id,null,{delete:true});S.receipt=S.receipt.filter(x=>x.id!==d.id);closeDrawer();render();toast('Deleted')}catch(e){toast(e.message)}};
+}
+$('#rFilePick').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('#rfMsg').textContent='Uploading…';
+  try{S.busy++;const u=await uploadOne(f);draft.file={key:u.key,type:u.type,name:u.name};drawReceipt();$('#rfMsg').textContent='Uploaded. Read it with AI or fill in the details.'}
+  catch(err){$('#rfMsg').textContent=err.message}finally{S.busy--}};
+
+const setHH=()=>{const h=document.querySelector('header.top');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+(document.getElementById('pvBar')?.offsetHeight||0)+'px')};
+addEventListener('resize',setHH);new ResizeObserver(setHH).observe(document.querySelector('header.top'));
+/* ---------- boot ---------- */
+(async()=>{
+  const k=new URLSearchParams(location.search).get('k');
+  try{const r=await fetch('/api/login');const j=await r.json();
+    if(j.session&&!k){S.me=j.session;startApp();return}}catch{}
+  if(k){$('#lgCode').value=k;
+    try{const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:k,name:''})});const j=await r.json();
+      if(r.ok&&j.session){S.me=j.session;history.replaceState(null,'',location.pathname);startApp();return}}catch{}}
+  showLogin();
+  try{const n=localStorage.getItem('nhrName');if(n)$('#lgName').value=n}catch{}
+  ($('#lgName').value?$('#lgCode'):$('#lgName')).focus();
+  $('#lgName').addEventListener('change',e=>{try{localStorage.setItem('nhrName',e.target.value)}catch{}});
+})();
+</script>
+</body>
+</html>

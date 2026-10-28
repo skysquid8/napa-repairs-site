@@ -187,6 +187,27 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
     id: "2026-10-28-spare2-skylights",
     ops: [{ matchShort: "Spare project 2", patch: { spare: false, askApproval: true, location: "Skylights (4)", section: "Interior", priority: 2, water: true,
       short: "Skylight rot and paint damage repair - 4X", title: "Repair rot and paint damage around the 4 skylights." } }],
+  },
+  {
+    id: "2026-10-28-priorities-3",
+    ops: [
+      { num: 20, patch: { priority: 2 } },
+      { num: 33, patch: { priority: 3 } },
+      { num: 3, patch: { priority: 3 } },
+      { num: 22, patch: { priority: 2 } },
+      { num: 27, patch: { priority: 3 } },
+      { num: 7, patch: { priority: 3 } },
+      { num: 41, patch: { priority: 2 } },
+      { num: 2, patch: { priority: 3 } },
+      { num: 30, patch: { priority: 3, water: false } },
+      { num: 52, patch: { priority: 2, askApproval: false } },
+      { num: 53, patch: { askApproval: false } },
+      { num: 54, patch: { askApproval: false } },
+      { num: 21, delete: true },
+      { num: 55, delete: true, onlyIfSpare: true },
+      { num: 56, delete: true, onlyIfSpare: true },
+      { num: 57, delete: true, onlyIfSpare: true },
+    ],
   }
 ];
 
@@ -218,6 +239,7 @@ export async function runMigrations(s: any) {
         const ph = src && ((src.photos || []).find((x: any) => x.stage === "before") || (src.photos || [])[0]);
         if (ph) { op.patch = { ...(op.patch || {}), photos: [{ key: ph.key, stage: "before", caption: "" }], cover: ph.key }; }
       }
+      if (op.onlyIfSpare && !cur.spare) { console.log("skip non-spare delete", op.num); continue; }
       if (op.delete) { await store.delete(`project/${cur.id}`); await store.delete(`review/${cur.id}`); cur._deleted = true; continue; }
       Object.assign(cur, op.patch, { updatedAt: new Date().toISOString(), updatedBy: "Claude (Timothy's edits)" });
       await store.setJSON(`project/${cur.id}`, cur);

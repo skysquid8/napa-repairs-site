@@ -20,7 +20,7 @@ export default async (req: Request) => {
     })
   );
   // Always keep three blank spare projects available for editors.
-  if (s.role === "editor" && out.project.length) {
+  if (false) {
     const spares = out.project.filter((p) => p.spare);
     console.log("state: projects", out.project.length, "spares", spares.length);
     let maxNum = Math.max(0, ...out.project.map((p) => +p.num || 0));

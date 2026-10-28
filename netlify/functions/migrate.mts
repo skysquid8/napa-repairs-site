@@ -173,6 +173,10 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
     id: "2026-10-27-spares",
     projects: [1, 2, 3].map((n) => ({ location: "Spare", section: "Interior", priority: 3, water: false, spare: true, askApproval: false,
       short: `Spare project ${n}`, title: `Spare project ${n}: drop photos here, then tell Claude what to name it.`, order: 100000 + n })),
+  },
+  {
+    id: "2026-10-28-fix-42",
+    ops: [{ num: 42, patch: { short: "Roof – gutter repair" } }],
   }
 ];
 

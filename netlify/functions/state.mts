@@ -1,8 +1,10 @@
 import { data, session, json, deny, uid } from "../lib/core.mjs";
+import { runMigrations } from "./migrate.mts";
 
 export default async (req: Request) => {
   const s = session(req);
   if (!s) return deny();
+  if (s.role === "editor") { try { await runMigrations(s); } catch (e: any) { console.log("migrations error", e?.stack || e); } }
   const store = data();
   const { blobs } = await store.list();
   const out: Record<string, any[]> = { project: [], review: [], comment: [], receipt: [] };

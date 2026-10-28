@@ -177,15 +177,18 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
   {
     id: "2026-10-28-fix-42",
     ops: [{ num: 42, patch: { short: "Roof – gutter repair" } }],
+  },
+  {
+    id: "2026-10-28-spare1-fence",
+    ops: [{ matchShort: "Spare project 1", patch: { spare: false, askApproval: true, location: "Fence", section: "Exterior", priority: 2,
+      short: "Exterior fence repair", title: "Repair the exterior fence." } }],
   }
 ];
 
-export default async (req: Request) => {
-  const s = session(req);
-  if (!s || s.role !== "editor") return deny("Editors only.", 403);
+export async function runMigrations(s: any) {
   const store = data();
   const { blobs } = await store.list({ prefix: "project/" });
-  if (!blobs.length) return json({ added: 0 }); // nothing imported yet; seed first
+  if (!blobs.length) return { added: 0, ran: [] }; // nothing imported yet; seed first
   const all: any[] = (await Promise.all(blobs.map((b) => store.get(b.key, { type: "json" })))).filter(Boolean);
   let maxNum = Math.max(0, ...all.map((p) => +p.num || 0));
   let maxOrd = Math.max(0, ...all.map((p) => +p.order || 0));
@@ -257,7 +260,14 @@ export default async (req: Request) => {
       console.log("migration FAILED", m.id, e?.stack || e);
     }
   }
-  return json({ added, ran });
+  console.log("migrations", JSON.stringify({ added, ran }));
+  return { added, ran };
+}
+
+export default async (req: Request) => {
+  const s = session(req);
+  if (!s || s.role !== "editor") return deny("Editors only.", 403);
+  return json(await runMigrations(s));
 };
 
 export const config = { path: "/api/migrate", method: "POST" };

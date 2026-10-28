@@ -170,7 +170,7 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
     ops: [{ num: 47, patch: { materials: "$400-600" } }],
   },
   {
-    id: "2026-10-27-spares",
+    id: "2026-10-28-spares-v2",
     projects: [1, 2, 3].map((n) => ({ location: "Spare", section: "Interior", priority: 3, water: false, spare: true, askApproval: false,
       short: `Spare project ${n}`, title: `Spare project ${n}: drop photos here, then tell Claude what to name it.`, order: 100000 + n })),
   },
@@ -190,10 +190,13 @@ export default async (req: Request) => {
   let maxNum = Math.max(0, ...all.map((p) => +p.num || 0));
   let maxOrd = Math.max(0, ...all.map((p) => +p.order || 0));
   let added = 0;
+  const ran: string[] = [];
   for (const m of MIGRATIONS.filter(Boolean)) {
     const flag = `migration/${m.id}`;
-    const { modified } = await store.setJSON(flag, { at: new Date().toISOString(), by: s.name }, { onlyIfNew: true });
-    if (!modified) continue;
+    const existing = await store.get(flag, { type: "json" });
+    if (existing) continue;
+    console.log("migration start", m.id);
+    try {
     const byNum = (n: number) => all.find((x) => +x.num === n && !x._deleted);
     for (const op of m.ops || []) {
       const cur = op.matchShort ? all.find((x) => x.short === op.matchShort && !x._deleted) : byNum(op.num);
@@ -239,6 +242,7 @@ export default async (req: Request) => {
       added++;
     }
     for (const p of m.projects || []) {
+      if (p.spare && all.some((x) => x.short === p.short && !x._deleted)) { console.log("spare exists", p.short); continue; }
       const id = uid();
       await store.setJSON(`project/${id}`, {
         id, num: ++maxNum, order: p.order ?? ++maxOrd, status: "queue", askApproval: true, hours: "", materials: "", labor: "",
@@ -246,8 +250,14 @@ export default async (req: Request) => {
       });
       added++;
     }
+      await store.setJSON(flag, { at: new Date().toISOString(), by: s.name });
+      ran.push(m.id);
+      console.log("migration done", m.id);
+    } catch (e: any) {
+      console.log("migration FAILED", m.id, e?.stack || e);
+    }
   }
-  return json({ added, changed: MIGRATIONS.length });
+  return json({ added, ran });
 };
 
 export const config = { path: "/api/migrate", method: "POST" };

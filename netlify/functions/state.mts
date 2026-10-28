@@ -1,4 +1,4 @@
-import { data, session, json, deny } from "../lib/core.mjs";
+import { data, session, json, deny, uid } from "../lib/core.mjs";
 
 export default async (req: Request) => {
   const s = session(req);
@@ -17,6 +17,22 @@ export default async (req: Request) => {
       if (out[kind]) out[kind].push(v);
     })
   );
+  // Always keep three blank spare projects available for editors.
+  if (s.role === "editor" && out.project.length) {
+    const spares = out.project.filter((p) => p.spare);
+    console.log("state: projects", out.project.length, "spares", spares.length);
+    let maxNum = Math.max(0, ...out.project.map((p) => +p.num || 0));
+    for (let n = spares.length + 1; n <= 3; n++) {
+      const id = uid();
+      const rec = { id, num: ++maxNum, order: 100000 + maxNum, status: "queue", askApproval: false, spare: true, private: false,
+        location: "Spare", section: "Interior", priority: 3, water: false, hours: "", materials: "", labor: "", notes: "", photos: [],
+        short: `Spare project ${n}`, title: `Spare project ${n}: drop photos here, then tell Claude what to name it.`,
+        createdAt: new Date().toISOString(), createdBy: "Claude" };
+      await store.setJSON(`project/${id}`, rec);
+      out.project.push(rec);
+      console.log("state: created spare", rec.num);
+    }
+  }
   const preview = s.role === "editor" && new URL(req.url).searchParams.get("as") === "reviewer";
   if (s.role !== "editor" || preview) {
     // Private items are never sent to the reviewer.

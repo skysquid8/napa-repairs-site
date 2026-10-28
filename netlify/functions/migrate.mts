@@ -182,6 +182,11 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
     id: "2026-10-28-spare1-fence",
     ops: [{ matchShort: "Spare project 1", patch: { spare: false, askApproval: true, location: "Fence", section: "Exterior", priority: 2,
       short: "Exterior fence repair", title: "Repair the exterior fence." } }],
+  },
+  {
+    id: "2026-10-28-spare2-skylights",
+    ops: [{ matchShort: "Spare project 2", patch: { spare: false, askApproval: true, location: "Skylights (4)", section: "Interior", priority: 2, water: true,
+      short: "Skylight rot and paint damage repair - 4X", title: "Repair rot and paint damage around the 4 skylights." } }],
   }
 ];
 

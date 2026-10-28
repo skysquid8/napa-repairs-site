@@ -538,7 +538,7 @@ function renderSummary(){
   const R=r=>!r||(!r[0]&&!r[1])?'—':(r[0]===r[1]?money(r[0]):`${money(r[0])}&thinsp;–&thinsp;${money(r[1])}`);
   const nIP=ps.filter(p=>stOf(p)==='in_progress').length,nD=ps.filter(p=>stOf(p)==='done').length;
   $('#summary').innerHTML=
-   `<section class="grp est"><h3>Estimate <span>labor $40/hr + parts</span></h3><div class="gv">${R(allT)}</div>
+   `<section class="grp est"><h3>Estimate <span>labor $40/hr + materials</span></h3><div class="gv">${R(allT)}</div>
       <div class="sub"><span>Labor ${R([eh[0]*RATE,eh[1]*RATE])} · ${fmtR(eh,'')} hrs</span><span>Materials ${R(em)}</span></div></section>
     <section class="grp"><h3>Spent so far</h3><div class="gv">${money(Math.round(spent))}</div>
       <div class="sub"><span>Labor ${money(Math.round(labSpent))}</span><span>Materials ${money(Math.round(matSpent))}</span></div></section>
@@ -572,7 +572,7 @@ const beforeOf=p=>{const c=pinned(p);return c&&c.stage==='before'?c:lastOf(p,'be
 const coverOf=p=>pinned(p)||lastOf(p,'after')||lastOf(p,'during')||lastOf(p,'before');
 const photoCount=p=>{const c={before:0,during:0,after:0};(p.photos||[]).forEach(x=>c[x.stage]=(c[x.stage]||0)+1);return c};
 function costLine(p){const e=estimate(p),a=actuals(p.id);
-  return `<div class="money"><div><span>Hours</span><b class="num">${e.h?fmtR(e.h,''):'—'}</b></div><div><span>Parts</span><b class="num">${e.m?fmtR(e.m):'—'}</b></div><div><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>Actual</span><b class="num">${a.total?money(a.total):'—'}</b></div></div>`}
+  return `<div class="money"><div><span>Hours</span><b class="num">${e.h?fmtR(e.h,''):'—'}</b></div><div><span>Materials</span><b class="num">${e.m?fmtR(e.m):'—'}</b></div><div><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>Actual</span><b class="num">${a.total?money(a.total):'—'}</b></div></div>`}
 function cardHTML(p,pos,big){
   const cv=coverOf(p),c=photoCount(p);
   return`<li class="card2${big?' big':''}${p.private?' private':''}" data-id="${p.id}">
@@ -655,7 +655,7 @@ Sortable.create($('#compact'),{handle:'.handle',animation:140,onStart(){S.draggi
 /* ---------- quick edit panel ---------- */
 function renderQE(list,all){
   const sel=(id,k,opts,v)=>`<select data-q="${id}" data-k="${k}" aria-label="${k}">${opts.map(([a,b])=>`<option value="${a}"${String(a)===String(v)?' selected':''}>${b}</option>`).join('')}</select>`;
-  $('#qe').innerHTML=`<div class="scroll"><table class="qt"><thead><tr><th>#</th><th>Photo</th><th>Where / what</th><th>Priority</th><th>Status</th><th class="c">Ask approval</th><th class="c">Done</th><th class="c">Private</th><th>Hours</th><th>Parts $</th><th class="n">Est. total</th></tr></thead><tbody>
+  $('#qe').innerHTML=`<div class="scroll"><table class="qt"><thead><tr><th>#</th><th>Photo</th><th>Where / what</th><th>Priority</th><th>Status</th><th class="c">Ask approval</th><th class="c">Done</th><th class="c">Private</th><th>Hours</th><th>Materials $</th><th class="n">Est. total</th></tr></thead><tbody>
   ${list.map(p=>{const cv=coverOf(p),e=estimate(p);return`<tr data-id="${p.id}" class="${p.private?'private':''} ${p.status==='done'?'isdone':''}">
     <td class="num">${esc(p.num)}</td>
     <td><button class="qthumb" data-open="${p.id}" aria-label="Open photos">${cv?`<img loading="lazy" src="${photoUrl(cv.key)}" alt="">`:'+'}</button></td>
@@ -666,7 +666,7 @@ function renderQE(list,all){
     <td class="c"><input type="checkbox" data-q="${p.id}" data-k="done"${p.status==='done'?' checked':''} aria-label="Done"></td>
     <td class="c"><input type="checkbox" data-q="${p.id}" data-k="private"${p.private?' checked':''} aria-label="Private"></td>
     <td><input class="sm num" data-q="${p.id}" data-k="hours" value="${esc(p.hours||'')}" placeholder="?" aria-label="Hours"></td>
-    <td><input class="sm num" data-q="${p.id}" data-k="materials" value="${esc(p.materials||'')}" placeholder="?" aria-label="Parts"></td>
+    <td><input class="sm num" data-q="${p.id}" data-k="materials" value="${esc(p.materials||'')}" placeholder="?" aria-label="Materials"></td>
     <td class="n num">${e.tot?fmtR(e.tot):'—'}</td></tr>`}).join('')}</tbody></table></div>
   <p class="hint">Changes save as soon as you leave a field. Click a photo to open the full project.</p>`;
 }
@@ -719,7 +719,7 @@ function renderRTable(list){
       <td><span class="chip st ${stOf(p)}">${STATUS[stOf(p)]}</span></td><td><span class="chip p${p.priority||2}">P${p.priority||2}</span>${isWater(p)?' <span class="chip water">Water</span>':''}</td>
       <td class="n">${e.h?fmtR(e.h,''):'—'}</td><td class="n">${e.m?fmtR(e.m):'—'}</td><td class="n">${e.tot?fmtR(e.tot):'—'}</td><td class="n">${a.total?money(Math.round(a.total)):'—'}</td>
       <td class="c">${n?`<button class="linkbtn" data-cmt="${p.id}">${n}</button>`:`<button class="linkbtn" data-cmt="${p.id}">Add</button>`}</td></tr>`}).join('');
-  $('#reviewPage').innerHTML=`<div class="scroll"><table class="rtable"><thead><tr><th>#</th><th>Project</th><th>Status</th><th>Priority</th><th class="n">Hours</th><th class="n">Parts</th><th class="n">Estimate</th><th class="n">Spent</th><th class="c">Comments</th></tr></thead>
+  $('#reviewPage').innerHTML=`<div class="scroll"><table class="rtable"><thead><tr><th>#</th><th>Project</th><th>Status</th><th>Priority</th><th class="n">Hours</th><th class="n">Materials</th><th class="n">Estimate</th><th class="n">Spent</th><th class="c">Comments</th></tr></thead>
     <tbody>${body}</tbody><tfoot><tr><td></td><td><b>${rows.length} projects</b></td><td></td><td></td><td></td><td></td><td class="n"><b>${fmtR(tE)}</b></td><td class="n"><b>${money(Math.round(tS))}</b></td><td></td></tr></tfoot></table></div>
     <p class="hint">Click any row to see photos and details.</p>`;
 }
@@ -754,7 +754,7 @@ function reviewCard(p,pos){
       <div class="tmeta"><span class="ref">#${esc(p.num)}</span><span>·</span><span>${esc(p.location)}</span><span>·</span><span>${esc(p.section||'')}</span></div>
       <h3>${esc(tTitle(p))}</h3>${p.why?`<p class="why">${esc(p.why)}</p>`:''}${p.short?`<p class="orig">Notes: ${esc(p.title)}</p>`:''}
       <div class="chips">${chipsFor(p)}</div>
-      <dl class="facts"><div><dt>Est. labor</dt><dd class="num">${e.h?hrsTxt(e.h):'Pending'}</dd></div><div><dt>Est. parts</dt><dd class="num">${e.m?fmtR(e.m):'Pending'}</dd></div><div><dt>Est. total</dt><dd class="num">${e.tot?fmtR(e.tot):'Pending'}</dd></div>${ac.total?`<div><dt>Spent</dt><dd class="num">${money(ac.total)}</dd></div>`:''}</dl>
+      <dl class="facts"><div><dt>Est. labor</dt><dd class="num">${e.h?hrsTxt(e.h):'Pending'}</dd></div><div><dt>Est. materials</dt><dd class="num">${e.m?fmtR(e.m):'Pending'}</dd></div><div><dt>Est. total</dt><dd class="num">${e.tot?fmtR(e.tot):'Pending'}</dd></div>${ac.total?`<div><dt>Spent</dt><dd class="num">${money(ac.total)}</dd></div>`:''}</dl>
       <div class="rrow">
         ${apOn()?`<button class="btn good ${r?.decision==='approved'?'':'off'}" data-ap="${p.id}">${r?.decision==='approved'?'✓ Approved':'Approve'}</button>
         <button class="btn bad ${r?.decision==='declined'?'on':''}" data-no="${p.id}">Not approved</button>`:''}
@@ -978,7 +978,7 @@ ${isEd()||!apOn()?'':`${reviewBlock}`}  <div class="card"><h3>Project</h3><div c
 
   <div class="card"><h3>Estimate</h3><div class="grid2">
     ${field(p,'hours','Labor hours','text')}
-    ${field(p,'materials','Materials / parts')}
+    ${field(p,'materials','Materials')}
     <label class="f">Labor cost<div class="ro num">${e.lab?fmtR(e.lab):'Add hours'}</div></label>
     <label class="f">Estimated total<div class="ro num">${e.tot?fmtR(e.tot):'Pending'}</div></label>
     ${field(p,'notes','Notes','textarea')}
@@ -1104,7 +1104,7 @@ function drawNew(){
     <label class="f">Priority<select id="n_priority"><option value="1">P1 Urgent</option><option value="2" selected>P2 Before rain</option><option value="3">P3 Later</option></select></label>
     <label class="f">Status<select id="n_status"><option value="queue">In queue</option><option value="in_progress">In progress</option><option value="done">Done</option></select></label>
     <label class="f">Labor hours<input id="n_hours" placeholder="2-3" inputmode="decimal"></label>
-    <label class="f">Parts $<input id="n_materials" placeholder="$50-60"></label>
+    <label class="f">Materials $<input id="n_materials" placeholder="$50-60"></label>
     <label class="f wide">Notes<textarea id="n_notes"></textarea></label>
   </div>
   <label class="privrow"><input type="checkbox" id="n_ask" checked> <span><b>Ask the manager to approve</b></span></label>
@@ -1142,7 +1142,7 @@ $('#newFiles').onchange=async e=>{const files=[...e.target.files].filter(f=>f.ty
 function renderReceipts(){
   let mat=0,lab=0,cost=0,hrs=0,unM=0,unH=0;
   for(const r of S.receipt){const c=receiptCheck(r);if(r.kind==='labor'){hrs+=(r.wlines||[]).length?wsum(r).bh:(+r.hours||0);lab+=billed(r);cost+=+r.total||0;unH+=Math.max(0,c.left)}else{mat+=+r.total||0;unM+=Math.max(0,c.left)}}
-  $('#rSummary').innerHTML=stat('Parts receipts',`<span class="num">${money(mat)}</span>`)+stat('Labor billed',`<span class="num">${money(lab)}</span> <small>${hrs} hrs × $40</small>`)+
+  $('#rSummary').innerHTML=stat('Materials receipts',`<span class="num">${money(mat)}</span>`)+stat('Labor billed',`<span class="num">${money(lab)}</span> <small>${hrs} hrs × $40</small>`)+
     (isEd()&&lab?stat('Handyman cost · margin',`<span class="num">${money(cost)}</span> <small>margin ${money(lab-cost)}</small>`):'')+
     stat('Total billed',`<span class="num">${money(mat+lab)}</span>`)+stat('Not yet assigned',`<span class="num">${money(unM)}</span> <small>+ ${Math.round(unH*100)/100} hrs</small>`);
   const list=[...S.receipt].sort((a,b)=>(b.date||'').localeCompare(a.date||''));

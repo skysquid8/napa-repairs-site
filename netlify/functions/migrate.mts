@@ -208,6 +208,10 @@ const MIGRATIONS: { id: string; projects?: any[]; ops?: any[]; receipts?: any[];
       { num: 56, delete: true, onlyIfSpare: true },
       { num: 57, delete: true, onlyIfSpare: true },
     ],
+  },
+  {
+    id: "2026-10-28-est-3",
+    ops: [{ num: 3, patch: { materials: "$80" } }],
   }
 ];
 

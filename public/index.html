@@ -466,7 +466,7 @@ function actuals(pid){
     if(r.kind==='labor'){const h=+a.hours||0,rt=rate();hrs+=h;lab+=h*rt;rows.push({r,txt:h+' hrs',amt:h*rt})}
     else{const v=+a.amount||0;mat+=v;rows.push({r,txt:'materials',amt:v})}}
   const p=S.project.find(x=>x.id===pid);
-  if(p&&(+p.actHours||0)){const h=+p.actHours;hrs+=h;lab+=h*rate();rows.push({r:{vendor:'Labor entered by hand'},txt:h+' hrs',amt:h*rate()})}
+  if(p&&(+p.actHours||0)){const h=+p.actHours,rt=+String(p.actRate||'').replace(/[$,]/g,'')||RATE;hrs+=h;lab+=h*rt;rows.push({r:{vendor:'Labor entered by hand'},txt:h+' hrs × $'+rt+'/hr',amt:h*rt})}
   if(p&&(+String(p.actMat||'').replace(/[$,]/g,'')||0)){const v=+String(p.actMat).replace(/[$,]/g,'');mat+=v;rows.push({r:{vendor:'Materials entered by hand'},txt:'materials',amt:v})}
   return{mat,hrs,lab,total:mat+lab,rows};
 }
@@ -1006,6 +1006,8 @@ ${isEd()&&apOn()?`${reviewBlock}`:''}
       <tr><td colspan="3"><b>Total spent</b> <span class="hint">vs. estimate ${e.tot?fmtR(e.tot):'pending'}</span></td><td class="n"><b>${money(a.total)}</b></td></tr></table></div>`:'<p class="hint" style="margin:0">No receipts or invoice hours assigned to this project yet.</p>'}
     ${isEd()?`<div class="grid2" style="margin-top:12px">
       <label class="f">Actual labor hours<input id="f_actHours" data-k="actHours" inputmode="decimal" value="${esc(p.actHours||'')}" placeholder="e.g. 3.5"></label>
+      <label class="f">Labor rate $/hr<input id="f_actRate" data-k="actRate" inputmode="decimal" value="${esc(p.actRate||RATE)}"></label>
+      <div class="f"><span>Labor cost</span><b class="num" id="labCalc" style="font-size:16px;padding-top:8px;display:block">${money((+p.actHours||0)*(+p.actRate||RATE))}</b></div>
       <label class="f">Actual materials $<input id="f_actMat" data-k="actMat" inputmode="decimal" value="${esc(p.actMat||'')}" placeholder="e.g. 85"></label></div>
       <div class="rrow"><button class="btn primary" id="addRcpt">+ Add receipt photo for this project</button><span class="hint">Or type the actual hours and materials above. Both count toward Actual.</span></div>`:''}
   </div>
@@ -1285,6 +1287,7 @@ addEventListener('resize',setHH);new ResizeObserver(setHH).observe(document.quer
   ($('#lgName').value?$('#lgCode'):$('#lgName')).focus();
   $('#lgName').addEventListener('change',e=>{try{localStorage.setItem('nhrName',e.target.value)}catch{}});
 })();
+document.addEventListener('input',e=>{if(e.target.id==='f_actHours'||e.target.id==='f_actRate'){const h=+($('#f_actHours')||{}).value||0,r=+String(($('#f_actRate')||{}).value||'').replace(/[$,]/g,'')||RATE,el=$('#labCalc');if(el)el.textContent=money(h*r)}});
 </script>
 </body>
 </html>

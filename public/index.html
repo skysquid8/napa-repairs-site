@@ -249,6 +249,7 @@ ol.tiles{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .picker .plist{max-height:260px;overflow:auto;display:grid}.picker .plist button{border:0;background:none;text-align:left;padding:7px 8px;border-radius:6px;font-size:13.5px}
 .picker .plist button.on,.picker .plist button:hover{background:var(--accent-soft)}
 .chip.spare{background:var(--sunk);color:var(--muted);border:1px dashed var(--line)}
+.money.has-act .est b{color:var(--muted);font-weight:500}.money.has-act .act b{color:var(--good);font-size:14px}.money.has-act .act span{color:var(--good)}
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgb(10 14 12/.45);z-index:40}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgb(0 0 0/.2)}
@@ -464,6 +465,9 @@ function actuals(pid){
   for(const r of S.receipt)for(const a of(r.allocations||[])){if(a.projectId!==pid)continue;
     if(r.kind==='labor'){const h=+a.hours||0,rt=rate();hrs+=h;lab+=h*rt;rows.push({r,txt:h+' hrs',amt:h*rt})}
     else{const v=+a.amount||0;mat+=v;rows.push({r,txt:'materials',amt:v})}}
+  const p=S.project.find(x=>x.id===pid);
+  if(p&&(+p.actHours||0)){const h=+p.actHours;hrs+=h;lab+=h*rate();rows.push({r:{vendor:'Labor entered by hand'},txt:h+' hrs',amt:h*rate()})}
+  if(p&&(+String(p.actMat||'').replace(/[$,]/g,'')||0)){const v=+String(p.actMat).replace(/[$,]/g,'');mat+=v;rows.push({r:{vendor:'Materials entered by hand'},txt:'materials',amt:v})}
   return{mat,hrs,lab,total:mat+lab,rows};
 }
 function receiptCheck(r){
@@ -572,7 +576,9 @@ const beforeOf=p=>{const c=pinned(p);return c&&c.stage==='before'?c:lastOf(p,'be
 const coverOf=p=>pinned(p)||lastOf(p,'after')||lastOf(p,'during')||lastOf(p,'before');
 const photoCount=p=>{const c={before:0,during:0,after:0};(p.photos||[]).forEach(x=>c[x.stage]=(c[x.stage]||0)+1);return c};
 function costLine(p){const e=estimate(p),a=actuals(p.id);
-  return `<div class="money"><div><span>Hours</span><b class="num">${e.h?fmtR(e.h,''):'—'}</b></div><div><span>Materials</span><b class="num">${e.m?fmtR(e.m):'—'}</b></div><div><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>Actual</span><b class="num">${a.total?money(a.total):'—'}</b></div></div>`}
+  if(a.total>0){const done=stOf(p)==='done',diff=e.tot?a.total-(e.tot[0]+e.tot[1])/2:0;
+    return `<div class="money has-act"><div><span>Hours</span><b class="num">${a.hrs?a.hrs:(e.h?fmtR(e.h,''):'—')}</b></div><div><span>Materials</span><b class="num">${a.mat?money(Math.round(a.mat)):(e.m?fmtR(e.m):'—')}</b></div><div class="est"><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>${done?'Final cost':'Spent so far'}</span><b class="num">${money(Math.round(a.total))}</b></div></div>`}
+  return `<div class="money"><div><span>Hours</span><b class="num">${e.h?fmtR(e.h,''):'—'}</b></div><div><span>Materials</span><b class="num">${e.m?fmtR(e.m):'—'}</b></div><div><span>Estimate</span><b class="num">${e.tot?fmtR(e.tot):'—'}</b></div><div class="act"><span>Actual</span><b class="num">—</b></div></div>`}
 function cardHTML(p,pos,big){
   const cv=coverOf(p),c=photoCount(p);
   return`<li class="card2${big?' big':''}${p.private?' private':''}" data-id="${p.id}">
@@ -998,6 +1004,10 @@ ${isEd()&&apOn()?`${reviewBlock}`:''}
     ${a.rows.length?`<div class="scroll"><table class="costs"><tr><th>Receipt / invoice</th><th>Date</th><th>For</th><th class="n">Amount</th></tr>
       ${a.rows.map(x=>`<tr><td>${esc(x.r.vendor||'Untitled')}</td><td>${esc(x.r.date||'')}</td><td>${esc(x.txt)}</td><td class="n">${money(x.amt)}</td></tr>`).join('')}
       <tr><td colspan="3"><b>Total spent</b> <span class="hint">vs. estimate ${e.tot?fmtR(e.tot):'pending'}</span></td><td class="n"><b>${money(a.total)}</b></td></tr></table></div>`:'<p class="hint" style="margin:0">No receipts or invoice hours assigned to this project yet.</p>'}
+    ${isEd()?`<div class="grid2" style="margin-top:12px">
+      <label class="f">Actual labor hours<input id="f_actHours" data-k="actHours" inputmode="decimal" value="${esc(p.actHours||'')}" placeholder="e.g. 3.5"></label>
+      <label class="f">Actual materials $<input id="f_actMat" data-k="actMat" inputmode="decimal" value="${esc(p.actMat||'')}" placeholder="e.g. 85"></label></div>
+      <div class="rrow"><button class="btn primary" id="addRcpt">+ Add receipt photo for this project</button><span class="hint">Or type the actual hours and materials above. Both count toward Actual.</span></div>`:''}
   </div>
 
   <div class="card"><h3>Comments</h3><div class="comments">
@@ -1010,6 +1020,7 @@ ${isEd()&&apOn()?`${reviewBlock}`:''}
   ${p.source?`<p class="hint" style="margin:0">Source: ${esc(p.source)}</p>`:''}`;
 
   const ab=$('#askBox');if(ab)ab.onchange=async()=>{p.askApproval=ab.checked;render();try{await save('project',p.id,{askApproval:ab.checked});toast(ab.checked?'Approval requested':'Approval request removed')}catch(e){toast(e.message)}};
+  const ar=$('#addRcpt');if(ar)ar.onclick=()=>{draft={kind:'receipt',vendor:'',date:new Date().toISOString().slice(0,10),total:'',hours:'',rate:'',allocations:[{projectId:p.id,amount:'',hours:''}],lines:[],notes:'',forProject:p.id};S.open={type:'receipt'};renderDrawer();$('#dBody').scrollTop=0};
   const pb=$('#privBox');if(pb)pb.onchange=async()=>{p.private=pb.checked;render();try{const j=await save('project',p.id,{private:pb.checked});Object.assign(p,j.record);toast(pb.checked?'Hidden from the manager':'Visible to the manager')}catch(e){toast(e.message)}};
   // field edits
   $('#dBody').querySelectorAll('[data-k]').forEach(el=>{el.addEventListener('change',async()=>{
@@ -1248,6 +1259,7 @@ function drawReceipt(){
   $('#rSave').onclick=async()=>{sync();
     if(d.kind==='labor'&&(d.wlines||[]).length){d.wlines=d.wlines.map(l=>({...l,hours:+l.hours||0,billHours:l.bill?(+l.billHours||0):0}));const w=wsum(d);d.hours=w.hrs;d.total=Math.round(w.hrs*(+d.rate||0)*100)/100;
       const al={};for(const l of d.wlines)if(l.bill&&l.projectId)al[l.projectId]=(al[l.projectId]||0)+l.billHours;d.allocations=Object.entries(al).map(([projectId,hours])=>({projectId,hours,amount:null}))}
+    if(d.forProject&&d.kind!=='labor'&&d.allocations.length===1&&!+d.allocations[0].amount)d.allocations[0].amount=d.total;
     const body={...d,total:+d.total||0,hours:d.kind==='labor'?+d.hours||0:null,rate:d.kind==='labor'?+d.rate||null:null,
       allocations:d.allocations.filter(a=>a.projectId).map(a=>({projectId:a.projectId,amount:d.kind==='labor'?null:+a.amount||0,hours:d.kind==='labor'?+a.hours||0:null}))};
     try{const j=await save('receipt',d.id||null,body);upsert('receipt',j.record);closeDrawer();render();toast('Saved')}catch(e){toast(e.message)}};

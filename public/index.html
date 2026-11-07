@@ -450,7 +450,11 @@ const save=(kind,id,data,extra={})=>S.preview?(toast('Manager preview: nothing i
 
 /* ---------- ranges & money ---------- */
 function range(s){if(s==null)return null;const m=String(s).replace(/[$,\s]/g,'').match(/(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?/);if(!m)return null;const a=+m[1],b=m[2]?+m[2]:a;return[a,b]}
-const RATE=40;const rate=()=>RATE;
+const RATE=40;
+function expList(p){if(!p)return[];if(Array.isArray(p.expenses))return p.expenses;const a=[];
+  if(+p.actHours)a.push({id:'e1',type:'labor',desc:'',date:'',hours:p.actHours,rate:p.actRate||RATE});
+  if(+String(p.actMat||'').replace(/[$,]/g,''))a.push({id:'e2',type:'mat',desc:'',date:'',amount:p.actMat});return a}
+const rate=()=>RATE;
 const wsum=r=>{const w=r.wlines||[];const hrs=w.reduce((t,l)=>t+(+l.hours||0),0),bh=w.reduce((t,l)=>t+(l.bill!==false?(+l.billHours||0):0),0),un=w.reduce((t,l)=>t+(l.bill!==false&&!l.projectId?(+l.billHours||0):0),0);return{hrs,bh,un}};
 const billed=r=>r.kind==='labor'?((r.wlines||[]).length?wsum(r).bh:(+r.hours||0))*RATE:(+r.total||0);
 function estimate(p){
@@ -466,8 +470,8 @@ function actuals(pid){
     if(r.kind==='labor'){const h=+a.hours||0,rt=rate();hrs+=h;lab+=h*rt;rows.push({r,txt:h+' hrs',amt:h*rt})}
     else{const v=+a.amount||0;mat+=v;rows.push({r,txt:'materials',amt:v})}}
   const p=S.project.find(x=>x.id===pid);
-  if(p&&(+p.actHours||0)){const h=+p.actHours,rt=+String(p.actRate||'').replace(/[$,]/g,'')||RATE;hrs+=h;lab+=h*rt;rows.push({r:{vendor:'Labor entered by hand'},txt:h+' hrs × $'+rt+'/hr',amt:h*rt})}
-  if(p&&(+String(p.actMat||'').replace(/[$,]/g,'')||0)){const v=+String(p.actMat).replace(/[$,]/g,'');mat+=v;rows.push({r:{vendor:'Materials entered by hand'},txt:'materials',amt:v})}
+  for(const x of expList(p)){if(x.type==='labor'){const h=+x.hours||0,rt=+x.rate||RATE;if(!h)continue;hrs+=h;lab+=h*rt;rows.push({r:{vendor:'Labor'+(x.desc?': '+x.desc:''),date:x.date},txt:h+' hrs × $'+rt+'/hr',amt:h*rt})}
+    else{const v=+String(x.amount||'').replace(/[$,]/g,'')||0;if(!v)continue;mat+=v;rows.push({r:{vendor:'Materials'+(x.desc?': '+x.desc:''),date:x.date},txt:'materials',amt:v})}}
   return{mat,hrs,lab,total:mat+lab,rows};
 }
 function receiptCheck(r){
@@ -1004,12 +1008,15 @@ ${isEd()&&apOn()?`${reviewBlock}`:''}
     ${a.rows.length?`<div class="scroll"><table class="costs"><tr><th>Receipt / invoice</th><th>Date</th><th>For</th><th class="n">Amount</th></tr>
       ${a.rows.map(x=>`<tr><td>${esc(x.r.vendor||'Untitled')}</td><td>${esc(x.r.date||'')}</td><td>${esc(x.txt)}</td><td class="n">${money(x.amt)}</td></tr>`).join('')}
       <tr><td colspan="3"><b>Total spent</b> <span class="hint">vs. estimate ${e.tot?fmtR(e.tot):'pending'}</span></td><td class="n"><b>${money(a.total)}</b></td></tr></table></div>`:'<p class="hint" style="margin:0">No receipts or invoice hours assigned to this project yet.</p>'}
-    ${isEd()?`<div class="grid2" style="margin-top:12px">
-      <label class="f">Actual labor hours<input id="f_actHours" data-k="actHours" inputmode="decimal" value="${esc(p.actHours||'')}" placeholder="e.g. 3.5"></label>
-      <label class="f">Labor rate $/hr<input id="f_actRate" data-k="actRate" inputmode="decimal" value="${esc(p.actRate||RATE)}"></label>
-      <div class="f"><span>Labor cost</span><b class="num" id="labCalc" style="font-size:16px;padding-top:8px;display:block">${money((+p.actHours||0)*(+p.actRate||RATE))}</b></div>
-      <label class="f">Actual materials $<input id="f_actMat" data-k="actMat" inputmode="decimal" value="${esc(p.actMat||'')}" placeholder="e.g. 85"></label></div>
-      <div class="rrow"><button class="btn primary" id="addRcpt">+ Add receipt photo for this project</button><span class="hint">Or type the actual hours and materials above. Both count toward Actual.</span></div>`:''}
+    ${isEd()?`<h4 style="margin:16px 0 6px">Labor and materials (no receipt)</h4>
+      <div id="expRows">${expList(p).map((x,n)=>`<div class="exp" data-n="${n}" style="display:grid;grid-template-columns:${x.type==='labor'?'110px 1fr 70px 70px 90px 32px':'110px 1fr 100px 90px 32px'};gap:6px;align-items:center;margin-bottom:6px">
+        <input type="date" data-e="date" value="${esc(x.date||'')}">
+        <input data-e="desc" placeholder="${x.type==='labor'?'Labor: what was done':'Materials: what was bought'}" value="${esc(x.desc||'')}">
+        ${x.type==='labor'?`<input data-e="hours" inputmode="decimal" placeholder="hrs" value="${esc(x.hours||'')}"><input data-e="rate" inputmode="decimal" placeholder="$/hr" value="${esc(x.rate||RATE)}"><b class="num">${money((+x.hours||0)*(+x.rate||RATE))}</b>`
+        :`<input data-e="amount" inputmode="decimal" placeholder="$" value="${esc(x.amount||'')}"><b class="num">${money(+String(x.amount||'').replace(/[$,]/g,'')||0)}</b>`}
+        <button class="btn" data-del="${n}" title="Remove">✕</button></div>`).join('')||'<p class="hint" style="margin:0">None yet.</p>'}</div>
+      <div class="rrow"><button class="btn" id="addLab">+ Add labor</button><button class="btn" id="addMat">+ Add materials</button><button class="btn primary" id="addRcpt">+ Add receipt photo</button></div>
+      <p class="hint">Add as many receipts, labor and materials lines as you need. They all add up to Actual.</p>`:''}
   </div>
 
   <div class="card"><h3>Comments</h3><div class="comments">
@@ -1022,6 +1029,11 @@ ${isEd()&&apOn()?`${reviewBlock}`:''}
   ${p.source?`<p class="hint" style="margin:0">Source: ${esc(p.source)}</p>`:''}`;
 
   const ab=$('#askBox');if(ab)ab.onchange=async()=>{p.askApproval=ab.checked;render();try{await save('project',p.id,{askApproval:ab.checked});toast(ab.checked?'Approval requested':'Approval request removed')}catch(e){toast(e.message)}};
+  const saveExp=async(list,redraw)=>{p.expenses=list;if(redraw)drawProject(p);renderTiles();renderSummary();try{const j=await save('project',p.id,{expenses:list});Object.assign(p,j.record);toast('Saved')}catch(e){toast(e.message)}};
+  const addE=t=>saveExp([...expList(p),t==='labor'?{id:'e'+Date.now(),type:'labor',date:new Date().toISOString().slice(0,10),desc:'',hours:'',rate:RATE}:{id:'e'+Date.now(),type:'mat',date:new Date().toISOString().slice(0,10),desc:'',amount:''}],true);
+  if($('#addLab'))$('#addLab').onclick=()=>addE('labor');if($('#addMat'))$('#addMat').onclick=()=>addE('mat');
+  document.querySelectorAll('#expRows [data-del]').forEach(b=>b.onclick=()=>{const l=expList(p).slice();l.splice(+b.dataset.del,1);saveExp(l,true)});
+  document.querySelectorAll('#expRows [data-e]').forEach(el=>el.onchange=()=>{const l=expList(p).map(x=>({...x}));l[+el.closest('.exp').dataset.n][el.dataset.e]=el.value;saveExp(l,true)});
   const ar=$('#addRcpt');if(ar)ar.onclick=()=>{draft={kind:'receipt',vendor:'',date:new Date().toISOString().slice(0,10),total:'',hours:'',rate:'',allocations:[{projectId:p.id,amount:'',hours:''}],lines:[],notes:'',forProject:p.id};S.open={type:'receipt'};renderDrawer();$('#dBody').scrollTop=0};
   const pb=$('#privBox');if(pb)pb.onchange=async()=>{p.private=pb.checked;render();try{const j=await save('project',p.id,{private:pb.checked});Object.assign(p,j.record);toast(pb.checked?'Hidden from the manager':'Visible to the manager')}catch(e){toast(e.message)}};
   // field edits
@@ -1264,7 +1276,7 @@ function drawReceipt(){
     if(d.forProject&&d.kind!=='labor'&&d.allocations.length===1&&!+d.allocations[0].amount)d.allocations[0].amount=d.total;
     const body={...d,total:+d.total||0,hours:d.kind==='labor'?+d.hours||0:null,rate:d.kind==='labor'?+d.rate||null:null,
       allocations:d.allocations.filter(a=>a.projectId).map(a=>({projectId:a.projectId,amount:d.kind==='labor'?null:+a.amount||0,hours:d.kind==='labor'?+a.hours||0:null}))};
-    try{const j=await save('receipt',d.id||null,body);upsert('receipt',j.record);closeDrawer();render();toast('Saved')}catch(e){toast(e.message)}};
+    try{const j=await save('receipt',d.id||null,body);upsert('receipt',j.record);if(d.forProject){render();openProject(d.forProject)}else{closeDrawer();render()}toast('Saved')}catch(e){toast(e.message)}};
   const del=$('#rDel');if(del)del.onclick=async()=>{if(!del.dataset.arm){del.dataset.arm=1;del.textContent='Tap again to delete';$('#rDelHint').textContent='This also removes the uploaded file.';return}
     try{await save('receipt',d.id,null,{delete:true});S.receipt=S.receipt.filter(x=>x.id!==d.id);closeDrawer();render();toast('Deleted')}catch(e){toast(e.message)}};
 }
